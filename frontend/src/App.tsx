@@ -1,20 +1,11 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-type Project = {
-  id: string
-  name: string
-  description: string
-  stack: string
-  status: string
-}
-
-type AgentResponse = {
-  mode: string
-  steps: string[]
-  message: string
-}
+type Project = { id: string; name: string; description: string; stack: string; status: string }
+type AgentResponse = { mode: string; steps: string[]; message: string }
+type Tab = 'Preview' | 'Code' | 'Database' | 'Versions' | 'Security' | 'Deploy'
 
 const initialPrompt = 'Build a customer onboarding application with authentication, dashboard, workflow and audit history.'
+const files = ['src/App.tsx','src/components/Dashboard.tsx','src/components/OnboardingForm.tsx','src/components/AuditTimeline.tsx','src/styles.css','server/api.ts','db/schema.sql','README.md']
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -22,130 +13,58 @@ export default function App() {
   const [prompt, setPrompt] = useState(initialPrompt)
   const [activity, setActivity] = useState<string[]>(['Create or select a project to begin.'])
   const [busy, setBusy] = useState(false)
+  const [built, setBuilt] = useState(false)
+  const [tab, setTab] = useState<Tab>('Preview')
+  const [selectedFile, setSelectedFile] = useState(files[0])
+  const [inspect, setInspect] = useState(false)
 
-  useEffect(() => {
-    void refreshProjects()
-  }, [])
+  useEffect(() => { void refreshProjects() }, [])
 
   async function refreshProjects() {
     const response = await fetch('/api/projects')
-    if (response.ok) {
-      const data: Project[] = await response.json()
-      setProjects(data)
-      if (!selected && data.length > 0) setSelected(data[0])
-    }
+    if (!response.ok) return
+    const data: Project[] = await response.json()
+    setProjects(data)
+    if (!selected && data.length > 0) setSelected(data[0])
   }
 
-  async function createProject(event: FormEvent) {
-    event.preventDefault()
+  async function createProject() {
     setBusy(true)
     try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `Untitled app ${projects.length + 1}`,
-          description: 'Created from ForgePilot AI',
-          stack: 'React + Spring Boot + PostgreSQL'
-        })
-      })
+      const response = await fetch('/api/projects', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name:`Untitled app ${projects.length + 1}`, description:'Created from ForgePilot AI', stack:'React + Spring Boot + PostgreSQL' }) })
       if (!response.ok) throw new Error('Unable to create project')
       const project: Project = await response.json()
-      setSelected(project)
-      setActivity([`Project ${project.name} created.`])
-      await refreshProjects()
-    } finally {
-      setBusy(false)
-    }
+      setSelected(project); setBuilt(false); setActivity([`Project ${project.name} created.`]); await refreshProjects()
+    } catch (error) { setActivity([error instanceof Error ? error.message : 'Project creation failed']) }
+    finally { setBusy(false) }
   }
 
   async function run(mode: 'plan' | 'build') {
     if (!selected || !prompt.trim()) return
     setBusy(true)
     try {
-      const response = await fetch(`/api/ai/${mode}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: selected.id, prompt })
-      })
+      const response = await fetch(`/api/ai/${mode}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ projectId:selected.id, prompt }) })
       if (!response.ok) throw new Error(`${mode} command failed`)
       const result: AgentResponse = await response.json()
       setActivity([result.message, ...result.steps])
+      if (mode === 'build') { setBuilt(true); setTab('Preview') }
       await refreshProjects()
-    } catch (error) {
-      setActivity([error instanceof Error ? error.message : 'Command failed'])
-    } finally {
-      setBusy(false)
-    }
+    } catch (error) { setActivity([error instanceof Error ? error.message : 'Command failed']) }
+    finally { setBusy(false) }
   }
 
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">ForgePilot <span>AI</span></div>
-        <div className="project-chip">{selected?.name ?? 'No project selected'}</div>
-        <div className="top-actions"><button>GitHub</button><button>Share</button></div>
-      </header>
+  const source = useMemo(() => selectedFile.endsWith('schema.sql')
+    ? 'create table customer (\n  id uuid primary key,\n  name varchar(160) not null,\n  email varchar(200) unique not null,\n  status varchar(40) not null,\n  created_at timestamp not null\n);'
+    : `export function App() {\n  return (\n    <main>\n      <h1>Customer onboarding</h1>\n      <p>Generated by ForgePilot AI</p>\n    </main>\n  )\n}`,[selectedFile])
 
-      <aside className="sidebar">
-        <button className="new-project" onClick={createProject} disabled={busy}>+ New project</button>
-        <div className="section-title">Projects</div>
-        <div className="project-list">
-          {projects.map(project => (
-            <button
-              key={project.id}
-              className={selected?.id === project.id ? 'project active' : 'project'}
-              onClick={() => setSelected(project)}
-            >
-              <strong>{project.name}</strong>
-              <span>{project.status} · {project.stack}</span>
-            </button>
-          ))}
-        </div>
-      </aside>
+  function content() {
+    if (tab === 'Code') return <div className="code-workspace"><div className="file-tree">{files.map(file=><button key={file} className={file===selectedFile?'file active':'file'} onClick={()=>setSelectedFile(file)}>▹ {file}</button>)}</div><pre className="code-editor">{source}</pre></div>
+    if (tab === 'Database') return <div className="tool-page"><h2>Database</h2><p>PostgreSQL workspace</p><div className="metric-grid"><div><b>4</b><span>Tables</span></div><div><b>12</b><span>Policies</span></div><div><b>Healthy</b><span>Connection</span></div></div><div className="schema-card"><b>customer</b><span>id · name · email · status · created_at</span></div><div className="schema-card"><b>audit_event</b><span>id · customer_id · action · actor · created_at</span></div></div>
+    if (tab === 'Versions') return <div className="tool-page"><h2>Version history</h2><p>Every AI change is recoverable.</p>{['Added audit history','Created onboarding workflow','Added authentication','Initial application'].map((v,i)=><div className="version-row" key={v}><div><b>{v}</b><span>{i===0?'just now':`${i*2} min ago`}</span></div><button>Restore</button></div>)}</div>
+    if (tab === 'Security') return <div className="tool-page"><h2>Security</h2><p>Automated application checks</p><div className="check good">✓ No exposed secrets</div><div className="check good">✓ Dependencies scanned</div><div className="check good">✓ Access rules reviewed</div><div className="check good">✓ Build integrity passed</div></div>
+    if (tab === 'Deploy') return <div className="tool-page"><h2>Publish</h2><p>Deployment is paused for this build.</p><div className="deploy-card"><b>forgepilot-preview.internal</b><span>Preview environment · Ready</span><button disabled>Publish</button></div></div>
+    return <div className="preview-canvas"><div className="browser-frame"><div className="browser-bar"><span>● ● ●</span><div>preview.forgepilot.app</div><button onClick={()=>setInspect(!inspect)}>Inspect</button></div>{built ? <div className="generated-app"><aside className="generated-nav"><h3>Acme</h3><b>Dashboard</b><span>Customers</span><span>Workflows</span><span>Audit</span><span>Settings</span></aside><main className="generated-main"><div className="generated-head"><div><small>WORKSPACE</small><h1>Customer onboarding</h1><p>Manage customers from application to activation.</p></div><button>+ Add customer</button></div><div className="stats"><div><b>128</b><span>Total customers</span></div><div><b>18</b><span>In review</span></div><div><b>94%</b><span>Completion</span></div></div><div className="table-card"><div className="table-title"><b>Recent customers</b><span>View all →</span></div><div className="customer-row"><b>Nova Labs</b><span>Verification</span><em>In review</em></div><div className="customer-row"><b>Northstar Inc.</b><span>Profile completed</span><em>Active</em></div><div className="customer-row"><b>Vertex Systems</b><span>Documents</span><em>Pending</em></div></div></main>{inspect&&<aside className="inspector"><h3>Inspector</h3><label>Selected</label><b>Primary button</b><label>Text</label><input value="+ Add customer" readOnly/><label>Radius</label><input value="8 px" readOnly/><label>Padding</label><input value="12 × 16" readOnly/><button onClick={()=>setInspect(false)}>Done</button></aside>}</div>:<div className="empty-preview"><div className="preview-icon">✦</div><h2>Ready to build</h2><p>Run Build to generate the application preview.</p></div>}</div></div>
+  }
 
-      <main className="workspace">
-        <section className="chat-panel">
-          <div className="panel-header">AI Builder</div>
-          <div className="conversation">
-            <div className="welcome-card">
-              <span className="eyebrow">BUILD WITH NATURAL LANGUAGE</span>
-              <h1>What should ForgePilot build?</h1>
-              <p>Describe the product. Plan mode reasons first; Build mode will execute verified workspace changes as the agent runtime is completed.</p>
-            </div>
-            <div className="activity">
-              {activity.map((line, index) => <div className="activity-row" key={`${line}-${index}`}>{line}</div>)}
-            </div>
-          </div>
-          <div className="composer">
-            <textarea value={prompt} onChange={event => setPrompt(event.target.value)} rows={4} />
-            <div className="composer-actions">
-              <button className="secondary" onClick={() => run('plan')} disabled={!selected || busy}>Plan</button>
-              <button className="primary" onClick={() => run('build')} disabled={!selected || busy}>Build</button>
-            </div>
-          </div>
-        </section>
-
-        <section className="preview-panel">
-          <div className="preview-toolbar">
-            <div><button className="tab active">Preview</button><button className="tab">Code</button></div>
-            <div className="preview-status">● Ready</div>
-          </div>
-          <div className="preview-canvas">
-            <div className="empty-preview">
-              <div className="preview-icon">⌘</div>
-              <h2>Application preview</h2>
-              <p>The isolated sandbox and live-rendering runtime arrives in the next milestone.</p>
-              <div className="feature-grid">
-                <div><strong>Plan</strong><span>Reason before changes</span></div>
-                <div><strong>Build</strong><span>Agent execution contract</span></div>
-                <div><strong>Code</strong><span>Workspace editor next</span></div>
-                <div><strong>Preview</strong><span>Sandbox runtime next</span></div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-  )
+  return <div className="app-shell"><header className="topbar"><div className="brand">ForgePilot <span>AI</span></div><div className="project-chip">{selected?.name ?? 'No project selected'}</div><div className="top-actions"><button>GitHub</button><button>Share</button><button className="publish">Publish</button></div></header><aside className="sidebar"><button className="new-project" onClick={()=>void createProject()} disabled={busy}>+ New project</button><div className="section-title">Projects</div><div className="project-list">{projects.map(project=><button key={project.id} className={selected?.id===project.id?'project active':'project'} onClick={()=>setSelected(project)}><strong>{project.name}</strong><span>{project.status} · {project.stack}</span></button>)}</div><div className="section-title">Workspace</div><div className="side-links"><button>Knowledge</button><button>Skills</button><button>Integrations</button><button>Members</button><button>Settings</button></div></aside><main className="workspace"><section className="chat-panel"><div className="panel-header"><span>AI Builder</span><span className="agent-pill">Agent</span></div><div className="conversation"><div className="welcome-card"><span className="eyebrow">BUILD WITH NATURAL LANGUAGE</span><h1>What should ForgePilot build?</h1><p>Plan, generate, edit and validate complete applications from one conversation.</p></div><div className="activity">{activity.map((line,index)=><div className="activity-row" key={`${line}-${index}`}>{line}</div>)}</div></div><div className="composer"><textarea value={prompt} onChange={event=>setPrompt(event.target.value)} rows={4}/><div className="composer-actions"><button className="secondary" onClick={()=>void run('plan')} disabled={!selected||busy}>Plan</button><button className="primary" onClick={()=>void run('build')} disabled={!selected||busy}>{busy?'Working…':'Build'}</button></div></div></section><section className="preview-panel"><div className="preview-toolbar"><div>{(['Preview','Code','Database','Versions','Security','Deploy'] as Tab[]).map(name=><button key={name} className={tab===name?'tab active':'tab'} onClick={()=>setTab(name)}>{name}</button>)}</div><div className="preview-status">● Ready</div></div>{content()}</section></main></div>
 }
