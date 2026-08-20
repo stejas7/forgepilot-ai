@@ -1,0 +1,122 @@
+name: Deploy ForgePilot to AWS EC2
+
+on:
+  workflow_run:
+    workflows: ["ForgePilot CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: forgepilot-production-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check deployment configuration
+        id: config
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          if [ -n "$EC2_HOST" ] && [ -n "$EC2_USERNAME" ] && [ -n "$EC2_SSH_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "EC2 deployment is configured."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "EC2 deployment skipped: add EC2_HOST, EC2_USERNAME and EC2_SSH_KEY repository secrets."
+          fi
+
+      - name: Resolve tested commit
+        if: steps.config.outputs.configured == 'true'
+        id: commit
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare SSH key
+        if: steps.config.outputs.configured == 'true'
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          printf '%s\n' "$EC2_SSH_KEY" > "$RUNNER_TEMP/forgepilot_key"
+          chmod 600 "$RUNNER_TEMP/forgepilot_key"
+
+      - name: Deploy immutable image
+        if: steps.config.outputs.configured == 'true'
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ghcr.io/${{ github.repository }}:${{ steps.commit.outputs.sha }}
+        run: |
+          set -Eeuo pipefail
+          SSH="ssh -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=no -i $RUNNER_TEMP/forgepilot_key"
+
+          timeout 60 $SSH "$EC2_USERNAME@$EC2_HOST" 'echo SSH_OK'
+
+          printf '%s' "$GHCR_TOKEN" | $SSH "$EC2_USERNAME@$EC2_HOST" "sudo docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+
+          $SSH "$EC2_USERNAME@$EC2_HOST" "bash -se" <<REMOTE
+          set -Eeuo pipefail
+          if [ ! -d "\$HOME/forgepilot-ai/.git" ]; then
+            git clone https://github.com/${{ github.repository }}.git "\$HOME/forgepilot-ai"
+          fi
+          cd "\$HOME/forgepilot-ai"
+          git fetch --prune origin main
+          git reset --hard origin/main
+          cat > .env <<'ENVFILE'
+          FORGEPILOT_IMAGE=$IMAGE
+          OPENAI_API_KEY=$OPENAI_API_KEY
+          FORGEPILOT_AI_MODEL=gpt-5.6-luna
+          SPRING_PROFILES_ACTIVE=prod
+          ENVFILE
+          chmod 600 .env
+          sudo docker pull "$IMAGE"
+          sudo docker compose --env-file .env up -d --remove-orphans
+          REMOTE
+
+      - name: Verify application health
+        if: steps.config.outputs.configured == 'true'
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+        run: |
+          set -Eeuo pipefail
+          SSH="ssh -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=no -i $RUNNER_TEMP/forgepilot_key"
+          for i in $(seq 1 40); do
+            if $SSH "$EC2_USERNAME@$EC2_HOST" "curl --connect-timeout 2 --max-time 5 -fsS http://127.0.0.1:8080/actuator/health" | grep -q '"status":"UP"'; then
+              echo "ForgePilot health is UP"
+              $SSH "$EC2_USERNAME@$EC2_HOST" "curl --connect-timeout 2 --max-time 5 -fsS http://127.0.0.1:8080/api/ai/runtime"
+              exit 0
+            fi
+            sleep 3
+          done
+          $SSH "$EC2_USERNAME@$EC2_HOST" "cd ~/forgepilot-ai && sudo docker compose ps && sudo docker compose logs --tail=200 forgepilot" || true
+          exit 1
+
+      - name: Deployment summary
+        if: always()
+        run: |
+          if [ "${{ steps.config.outputs.configured }}" = "true" ]; then
+            echo "### ForgePilot EC2 deployment attempted" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ForgePilot EC2 deployment is ready but waiting for EC2 secrets" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Remove temporary SSH key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/forgepilot_key"
