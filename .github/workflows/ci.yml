@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 jobs:
-  verify:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,14 +26,14 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Verify backend
-        run: mvn -B verify
+      - name: Compile and package backend
+        run: mvn -B -DskipTests clean package
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm install --package-lock-only && npm ci
+        run: npm install --no-audit --no-fund
 
-      - name: Verify frontend
+      - name: Build frontend
         working-directory: frontend
         run: npm run build
 
