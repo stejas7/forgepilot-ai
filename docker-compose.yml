@@ -4,7 +4,7 @@ services:
     container_name: forgepilot-ai
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${FORGEPILOT_PORT:-8090}:8080"
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
