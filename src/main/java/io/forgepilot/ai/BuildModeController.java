@@ -2,6 +2,7 @@ package io.forgepilot.ai;
 
 import io.forgepilot.project.Project;
 import io.forgepilot.project.ProjectService;
+import io.forgepilot.workspace.WorkspaceService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,10 +41,12 @@ public class BuildModeController {
 
     private final ProjectService projectService;
     private final OpenAiGateway openAiGateway;
+    private final WorkspaceService workspaceService;
 
-    public BuildModeController(ProjectService projectService, OpenAiGateway openAiGateway) {
+    public BuildModeController(ProjectService projectService, OpenAiGateway openAiGateway, WorkspaceService workspaceService) {
         this.projectService = projectService;
         this.openAiGateway = openAiGateway;
+        this.workspaceService = workspaceService;
     }
 
     @GetMapping("/runtime")
@@ -72,6 +75,8 @@ public class BuildModeController {
     public AgentResponse build(@Valid @RequestBody AgentRequest request) {
         Project project = projectService.updateStatus(request.projectId(), Project.ProjectStatus.BUILDING);
         String generated = generateOrFallback(BUILD_SYSTEM, request.prompt(), "Build change-set prepared in deterministic demo mode.");
+        workspaceService.seedGeneratedApplication(project.id(), request.prompt(), generated);
+        workspaceService.snapshot(project.id(), "AI build: " + summarize(request.prompt()));
         projectService.updateStatus(project.id(), Project.ProjectStatus.READY);
         return new AgentResponse(
                 "BUILD",
@@ -80,8 +85,8 @@ public class BuildModeController {
                 List.of(
                         "Load current project context",
                         "Generate implementation change-set",
-                        "Validate architecture and tests",
-                        "Prepare workspace snapshot",
+                        "Write generated files to workspace",
+                        "Create recoverable version snapshot",
                         "Mark project ready for preview"),
                 generated,
                 Instant.now());
@@ -98,8 +103,12 @@ public class BuildModeController {
         }
     }
 
-    public record AgentRequest(UUID projectId, @NotBlank(message = "prompt is required") String prompt) {
+    private String summarize(String prompt) {
+        String value = prompt == null ? "Generated application" : prompt.trim();
+        return value.length() <= 48 ? value : value.substring(0, 45) + "...";
     }
+
+    public record AgentRequest(UUID projectId, @NotBlank(message = "prompt is required") String prompt) {}
 
     public record AgentResponse(
             String mode,
@@ -107,9 +116,7 @@ public class BuildModeController {
             String prompt,
             List<String> steps,
             String message,
-            Instant createdAt) {
-    }
+            Instant createdAt) {}
 
-    public record AiRuntime(boolean configured, String provider, String model) {
-    }
+    public record AiRuntime(boolean configured, String provider, String model) {}
 }
