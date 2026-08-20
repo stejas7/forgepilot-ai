@@ -35,3 +35,5 @@ mvn spring-boot:run
 
 Health: `GET /actuator/health`
 Platform status: `GET /api/platform/status`
+
+<!-- rebuild marker: 2026-08-20 -->
