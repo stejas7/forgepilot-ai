@@ -21,7 +21,6 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check deployment configuration
-        id: config
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
@@ -31,8 +30,6 @@ jobs:
           test -n "$EC2_HOST"
           test -n "$EC2_USERNAME"
           test -n "$EC2_SSH_KEY"
-          echo "configured=true" >> "$GITHUB_OUTPUT"
-          echo "EC2 deployment configuration is present."
 
       - name: Resolve tested commit
         id: commit
@@ -64,6 +61,9 @@ jobs:
           printf '%s' "$GHCR_TOKEN" | $SSH "$EC2_USERNAME@$EC2_HOST" "sudo docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
           $SSH "$EC2_USERNAME@$EC2_HOST" "bash -se" <<REMOTE
           set -Eeuo pipefail
+          if command -v ufw >/dev/null 2>&1; then
+            sudo ufw allow 8090/tcp || true
+          fi
           if [ ! -d "\$HOME/forgepilot-ai/.git" ]; then
             git clone https://github.com/${{ github.repository }}.git "\$HOME/forgepilot-ai"
           fi
@@ -78,11 +78,14 @@ jobs:
           SPRING_PROFILES_ACTIVE=prod
           ENVFILE
           chmod 600 .env
+          sudo docker compose down --remove-orphans || true
           sudo docker pull "$IMAGE"
-          sudo docker compose --env-file .env up -d --remove-orphans
+          sudo docker compose --env-file .env up -d --force-recreate --remove-orphans
+          sudo docker compose ps
+          sudo ss -ltnp | grep ':8090' || true
           REMOTE
 
-      - name: Verify application health
+      - name: Verify application inside EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
@@ -91,13 +94,28 @@ jobs:
           SSH="ssh -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=no -i $RUNNER_TEMP/forgepilot_key"
           for i in $(seq 1 40); do
             if $SSH "$EC2_USERNAME@$EC2_HOST" "curl --connect-timeout 2 --max-time 5 -fsS http://127.0.0.1:8090/actuator/health" | grep -q '"status":"UP"'; then
-              echo "ForgePilot health is UP on host port 8090"
+              echo "ForgePilot internal health is UP"
               $SSH "$EC2_USERNAME@$EC2_HOST" "curl --connect-timeout 2 --max-time 5 -fsS http://127.0.0.1:8090/api/ai/runtime"
               exit 0
             fi
             sleep 3
           done
-          $SSH "$EC2_USERNAME@$EC2_HOST" "cd ~/forgepilot-ai && sudo docker compose ps && sudo docker compose logs --tail=200 forgepilot" || true
+          $SSH "$EC2_USERNAME@$EC2_HOST" "cd ~/forgepilot-ai && sudo docker compose ps && sudo docker compose logs --tail=250 forgepilot" || true
+          exit 1
+
+      - name: Verify public endpoint
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          set -Eeuo pipefail
+          for i in $(seq 1 12); do
+            if curl --connect-timeout 3 --max-time 6 -fsS "http://$EC2_HOST:8090/actuator/health" | grep -q '"status":"UP"'; then
+              echo "ForgePilot public endpoint is reachable at http://$EC2_HOST:8090/"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Public endpoint is not reachable even though internal health passed. Check AWS Security Group inbound TCP 8090."
           exit 1
 
       - name: Remove temporary SSH key
