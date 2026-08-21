@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: forgepilot-production-deploy
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -54,6 +54,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE: ghcr.io/${{ github.repository }}:${{ steps.commit.outputs.sha }}
+          TESTED_SHA: ${{ steps.commit.outputs.sha }}
         run: |
           set -Eeuo pipefail
           SSH="ssh -o BatchMode=yes -o ConnectTimeout=20 -o StrictHostKeyChecking=no -i $RUNNER_TEMP/forgepilot_key"
@@ -69,7 +70,7 @@ jobs:
           fi
           cd "\$HOME/forgepilot-ai"
           git fetch --prune origin main
-          git reset --hard origin/main
+          git reset --hard "$TESTED_SHA"
           cat > .env <<'ENVFILE'
           FORGEPILOT_IMAGE=$IMAGE
           FORGEPILOT_PORT=8090
