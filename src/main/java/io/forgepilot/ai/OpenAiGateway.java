@@ -11,12 +11,6 @@ import org.springframework.web.client.RestClient;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Server-side OpenAI Responses API gateway. The API key is read only from the
- * runtime environment and is never returned to clients.
- *
- * @author Tejas Shah
- */
 @Component
 public class OpenAiGateway {
 
@@ -41,6 +35,10 @@ public class OpenAiGateway {
     }
 
     public String generate(String systemInstruction, String userPrompt) {
+        return generateWithUsage(systemInstruction, userPrompt).text();
+    }
+
+    public GenerationResult generateWithUsage(String systemInstruction, String userPrompt) {
         if (!configured()) {
             throw new IllegalStateException("OPENAI_API_KEY is not configured");
         }
@@ -69,19 +67,28 @@ public class OpenAiGateway {
 
         try {
             JsonNode root = objectMapper.readTree(raw);
+            String text = null;
             for (JsonNode output : root.path("output")) {
                 for (JsonNode content : output.path("content")) {
                     if ("output_text".equals(content.path("type").asText())) {
-                        String text = content.path("text").asText();
-                        if (StringUtils.hasText(text)) {
-                            return text;
+                        String candidate = content.path("text").asText();
+                        if (StringUtils.hasText(candidate)) {
+                            text = candidate;
+                            break;
                         }
                     }
                 }
             }
-            throw new IllegalStateException("OpenAI response did not contain output_text");
+            if (!StringUtils.hasText(text)) {
+                throw new IllegalStateException("OpenAI response did not contain output_text");
+            }
+            int inputTokens = root.path("usage").path("input_tokens").asInt(0);
+            int outputTokens = root.path("usage").path("output_tokens").asInt(0);
+            return new GenerationResult(text, inputTokens, outputTokens);
         } catch (Exception exception) {
             throw new IllegalStateException("Unable to parse OpenAI response", exception);
         }
     }
+
+    public record GenerationResult(String text, int inputTokens, int outputTokens) {}
 }
