@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
@@ -35,16 +37,18 @@ public class AiStreamController {
             BuildModeController.AgentResponse result = "plan".equalsIgnoreCase(mode)
                     ? commands.plan(request)
                     : commands.build(request);
-            for (String step : result.steps()) emit(output, "step", step);
+            for (String step : result.steps()) {
+                emit(output, "step", step);
+            }
             write(output, Map.of("type", "result", "result", result));
         };
     }
 
-    private void emit(java.io.OutputStream output, String type, String message) throws Exception {
+    private void emit(OutputStream output, String type, String message) throws IOException {
         write(output, Map.of("type", type, "message", message, "at", Instant.now().toString()));
     }
 
-    private void write(java.io.OutputStream output, Object value) throws Exception {
+    private void write(OutputStream output, Object value) throws IOException {
         output.write((objectMapper.writeValueAsString(value) + "\n").getBytes(StandardCharsets.UTF_8));
         output.flush();
     }
