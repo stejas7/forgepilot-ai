@@ -15,7 +15,9 @@ RUN mvn -B -q -DskipTests clean package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-RUN useradd --system --uid 10001 forgepilot
+RUN useradd --system --uid 10001 forgepilot \
+    && mkdir -p /var/lib/forgepilot \
+    && chown -R forgepilot:forgepilot /var/lib/forgepilot
 COPY --from=backend-build /workspace/target/forgepilot-ai-0.1.0-SNAPSHOT.jar app.jar
 USER forgepilot
 EXPOSE 8080
