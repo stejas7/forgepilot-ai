@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
+/** Creator-facing generated application runtime controls. */
 @RestController
 @RequestMapping("/api/projects/{projectId}/runtime")
 public class PreviewRuntimeController {
@@ -20,6 +21,11 @@ public class PreviewRuntimeController {
 
     @GetMapping
     public PreviewRuntimeService.RuntimeReport verify(@PathVariable UUID projectId) {
+        return runtimeService.verify(projectId);
+    }
+
+    @PostMapping("/restart")
+    public PreviewRuntimeService.RuntimeReport restart(@PathVariable UUID projectId) {
         return runtimeService.verify(projectId);
     }
 
