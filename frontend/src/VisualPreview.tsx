@@ -39,7 +39,17 @@ export default function VisualPreview({projectId,projectName,refresh,setRefresh,
   function undo(){const prev=undoRef.current.pop();if(!prev)return;const cur=cleanHtml();if(cur)redoRef.current.push(cur);replaceDocument(prev);setHistoryTick(v=>v+1)}
   function redo(){const next=redoRef.current.pop();if(!next)return;const cur=cleanHtml();if(cur)undoRef.current.push(cur);replaceDocument(next);setHistoryTick(v=>v+1)}
   async function saveVisualChanges(){const html=cleanHtml();if(!html)return;setSaving(true);try{const r=await fetch(`/api/projects/${projectId}/workspace/files/${encodeURI('preview/index.html')}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:html})});if(!r.ok)throw new Error('Unable to save visual changes');await fetch(`/api/projects/${projectId}/workspace/versions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label:`Visual edit: ${selection?.selector||'preview'}`})});undoRef.current=[];redoRef.current=[];setHistoryTick(v=>v+1);clearSelection();setInspectMode(false);setRefresh(v=>v+1);await loadVersions()}finally{setSaving(false)}}
-  function sendTargetToAI(){if(!selection||!onTargetPrompt)return;onTargetPrompt(`Update the selected component ${selection.selector} (<${selection.tag}>). Current text: "${selection.text.slice(0,180)}". `)}
+  function sendTargetToAI(){
+    if(!selection)return
+    const text=`Update the selected component ${selection.selector} (<${selection.tag}>). Current text: "${selection.text.slice(0,180)}". `
+    if(onTargetPrompt){onTargetPrompt(text);return}
+    const composer=document.querySelector('.builder-composer textarea') as HTMLTextAreaElement|null
+    if(!composer)return
+    const setter=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value')?.set
+    setter?.call(composer,text)
+    composer.dispatchEvent(new Event('input',{bubbles:true}))
+    composer.focus()
+  }
 
   const previewUrl=`/api/projects/${projectId}/preview?v=${refresh}`
   return <div className="visual-workspace">
