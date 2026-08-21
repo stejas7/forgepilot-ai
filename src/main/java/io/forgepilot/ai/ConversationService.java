@@ -1,27 +1,39 @@
 package io.forgepilot.ai;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import io.forgepilot.platform.PlatformStateStore;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Project-scoped AI conversation history.
- *
- * This is the conversation abstraction used by the creator-first builder. The
- * storage implementation will move to PostgreSQL with the platform persistence
- * milestone without changing the API contract.
+ * Durable project-scoped AI conversation history.
  *
  * @author Tejas Shah
  */
 @Service
 public class ConversationService {
 
-    private final Map<UUID, List<ConversationMessage>> messagesByProject = new ConcurrentHashMap<>();
+    private static final String STATE_FILE = "conversations.json";
+
+    private final PlatformStateStore stateStore;
+    private final Map<UUID, List<ConversationMessage>> messagesByProject;
+
+    public ConversationService(PlatformStateStore stateStore) {
+        this.stateStore = stateStore;
+        Map<UUID, List<ConversationMessage>> loaded = stateStore.read(
+                STATE_FILE,
+                new TypeReference<Map<UUID, List<ConversationMessage>>>() {},
+                LinkedHashMap::new);
+        this.messagesByProject = new LinkedHashMap<>();
+        loaded.forEach((projectId, messages) ->
+                this.messagesByProject.put(projectId, new ArrayList<>(messages)));
+    }
 
     public synchronized List<ConversationMessage> messages(UUID projectId) {
         return List.copyOf(messagesByProject.computeIfAbsent(projectId, ignored -> new ArrayList<>()));
@@ -44,6 +56,7 @@ public class ConversationService {
                 content == null ? "" : content,
                 Instant.now());
         messagesByProject.computeIfAbsent(projectId, ignored -> new ArrayList<>()).add(message);
+        stateStore.write(STATE_FILE, messagesByProject);
         return message;
     }
 
