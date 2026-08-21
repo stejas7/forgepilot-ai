@@ -42,11 +42,17 @@ public class BuildModeController {
     private final ProjectService projectService;
     private final OpenAiGateway openAiGateway;
     private final WorkspaceService workspaceService;
+    private final ConversationService conversationService;
 
-    public BuildModeController(ProjectService projectService, OpenAiGateway openAiGateway, WorkspaceService workspaceService) {
+    public BuildModeController(
+            ProjectService projectService,
+            OpenAiGateway openAiGateway,
+            WorkspaceService workspaceService,
+            ConversationService conversationService) {
         this.projectService = projectService;
         this.openAiGateway = openAiGateway;
         this.workspaceService = workspaceService;
+        this.conversationService = conversationService;
     }
 
     @GetMapping("/runtime")
@@ -57,7 +63,9 @@ public class BuildModeController {
     @PostMapping("/plan")
     public AgentResponse plan(@Valid @RequestBody AgentRequest request) {
         Project project = projectService.updateStatus(request.projectId(), Project.ProjectStatus.PLANNING);
+        conversationService.addUser(project.id(), "PLAN", request.prompt());
         String generated = generateOrFallback(PLAN_SYSTEM, request.prompt(), "Plan prepared in deterministic demo mode.");
+        conversationService.addAssistant(project.id(), "PLAN", generated);
         return new AgentResponse(
                 "PLAN",
                 project.id(),
@@ -74,10 +82,12 @@ public class BuildModeController {
     @PostMapping("/build")
     public AgentResponse build(@Valid @RequestBody AgentRequest request) {
         Project project = projectService.updateStatus(request.projectId(), Project.ProjectStatus.BUILDING);
+        conversationService.addUser(project.id(), "BUILD", request.prompt());
         String generated = generateOrFallback(BUILD_SYSTEM, request.prompt(), "Build change-set prepared in deterministic demo mode.");
         workspaceService.seedGeneratedApplication(project.id(), request.prompt(), generated);
         workspaceService.snapshot(project.id(), "AI build: " + summarize(request.prompt()));
         projectService.updateStatus(project.id(), Project.ProjectStatus.READY);
+        conversationService.addAssistant(project.id(), "BUILD", generated);
         return new AgentResponse(
                 "BUILD",
                 project.id(),
