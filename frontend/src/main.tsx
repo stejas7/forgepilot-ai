@@ -7,6 +7,7 @@ import './p2.css'
 import './p5.css'
 import './p6.css'
 import './p7.css'
+import './p11.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
