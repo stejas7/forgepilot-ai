@@ -20,13 +20,10 @@ public class SecurityConfig {
     static class OAuthSecurity {
         @Bean
         SecurityFilterChain oauthSecurityFilterChain(HttpSecurity http,
-                                                     WorkspaceAccessAuthorizationManager workspaceAccess,
-                                                     CaptchaAuthorizationManager captchaAccess) throws Exception {
-            http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/captcha/**"))
-                .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/", "/index.html", "/assets/**", "/login", "/actuator/health", "/api/auth/providers", "/api/auth/readiness", "/api/auth/captcha/**", "/error").permitAll()
-                    .requestMatchers("/oauth2/authorization/google", "/oauth2/authorization/github").access(captchaAccess)
-                    .requestMatchers("/login/oauth2/code/**").permitAll()
+                                                     WorkspaceAccessAuthorizationManager workspaceAccess) throws Exception {
+            http.authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/", "/index.html", "/assets/**", "/login", "/actuator/health", "/api/auth/providers", "/api/auth/readiness", "/error").permitAll()
+                    .requestMatchers("/oauth2/authorization/google", "/oauth2/authorization/github", "/login/oauth2/code/**").permitAll()
                     .anyRequest().access(workspaceAccess))
                 .oauth2Login(oauth -> oauth.defaultSuccessUrl("/", true))
                 .logout(logout -> logout
