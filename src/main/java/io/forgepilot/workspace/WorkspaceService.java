@@ -1,5 +1,7 @@
 package io.forgepilot.workspace;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import io.forgepilot.platform.PlatformStateStore;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -8,18 +10,37 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Project file workspace with recoverable snapshots.
+ * Durable project file workspace with recoverable snapshots.
  *
  * @author Tejas Shah
  */
 @Service
 public class WorkspaceService {
 
-    private final Map<UUID, LinkedHashMap<String, String>> filesByProject = new ConcurrentHashMap<>();
-    private final Map<UUID, List<WorkspaceVersion>> versionsByProject = new ConcurrentHashMap<>();
+    private static final String FILES_STATE = "workspace-files.json";
+    private static final String VERSIONS_STATE = "workspace-versions.json";
+
+    private final PlatformStateStore stateStore;
+    private final Map<UUID, LinkedHashMap<String, String>> filesByProject;
+    private final Map<UUID, List<WorkspaceVersion>> versionsByProject;
+
+    public WorkspaceService(PlatformStateStore stateStore) {
+        this.stateStore = stateStore;
+        Map<UUID, LinkedHashMap<String, String>> loadedFiles = stateStore.read(
+                FILES_STATE,
+                new TypeReference<Map<UUID, LinkedHashMap<String, String>>>() {},
+                LinkedHashMap::new);
+        Map<UUID, List<WorkspaceVersion>> loadedVersions = stateStore.read(
+                VERSIONS_STATE,
+                new TypeReference<Map<UUID, List<WorkspaceVersion>>>() {},
+                LinkedHashMap::new);
+        this.filesByProject = new LinkedHashMap<>(loadedFiles);
+        this.versionsByProject = new LinkedHashMap<>();
+        loadedVersions.forEach((projectId, versions) ->
+                this.versionsByProject.put(projectId, new ArrayList<>(versions)));
+    }
 
     public synchronized List<WorkspaceFile> listFiles(UUID projectId) {
         return files(projectId).entrySet().stream()
@@ -37,8 +58,10 @@ public class WorkspaceService {
 
     public synchronized WorkspaceFile putFile(UUID projectId, String path, String content) {
         validatePath(path);
-        files(projectId).put(path, content == null ? "" : content);
-        return new WorkspaceFile(path, content == null ? "" : content);
+        String value = content == null ? "" : content;
+        files(projectId).put(path, value);
+        persistFiles();
+        return new WorkspaceFile(path, value);
     }
 
     public synchronized List<WorkspaceVersion> versions(UUID projectId) {
@@ -52,6 +75,7 @@ public class WorkspaceService {
                 Instant.now(),
                 Map.copyOf(files(projectId)));
         versionsByProject.computeIfAbsent(projectId, ignored -> new ArrayList<>()).add(0, version);
+        persistVersions();
         return version;
     }
 
@@ -61,6 +85,7 @@ public class WorkspaceService {
                 .findFirst()
                 .orElseThrow(() -> new WorkspaceVersionNotFoundException(versionId));
         filesByProject.put(projectId, new LinkedHashMap<>(version.files()));
+        persistFiles();
         return version;
     }
 
@@ -114,10 +139,19 @@ public class WorkspaceService {
                 """);
         files.put("db/schema.sql", "create table app_user (id uuid primary key, email varchar(200) unique not null, created_at timestamp not null);\n");
         files.put("BUILD.md", "# ForgePilot build\n\nPrompt:\n" + prompt + "\n\nAI summary:\n" + buildSummary + "\n");
+        persistFiles();
     }
 
     private LinkedHashMap<String, String> files(UUID projectId) {
         return filesByProject.computeIfAbsent(projectId, ignored -> new LinkedHashMap<>());
+    }
+
+    private void persistFiles() {
+        stateStore.write(FILES_STATE, filesByProject);
+    }
+
+    private void persistVersions() {
+        stateStore.write(VERSIONS_STATE, versionsByProject);
     }
 
     private void validatePath(String path) {
