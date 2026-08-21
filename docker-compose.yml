@@ -1,8 +1,27 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: forgepilot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${FORGEPILOT_DB_NAME:-forgepilot}
+      POSTGRES_USER: ${FORGEPILOT_DB_USER:-forgepilot}
+      POSTGRES_PASSWORD: ${FORGEPILOT_DB_PASSWORD:-forgepilot}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FORGEPILOT_DB_USER:-forgepilot} -d ${FORGEPILOT_DB_NAME:-forgepilot}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - forgepilot-postgres:/var/lib/postgresql/data
+
   forgepilot:
     image: ${FORGEPILOT_IMAGE:-ghcr.io/stejas7/forgepilot-ai:latest}
     container_name: forgepilot-ai
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "${FORGEPILOT_PORT:-8090}:8080"
     environment:
@@ -10,8 +29,13 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       FORGEPILOT_AI_MODEL: ${FORGEPILOT_AI_MODEL:-gpt-5.6-luna}
       FORGEPILOT_DATA_DIR: /var/lib/forgepilot
+      FORGEPILOT_DB_URL: jdbc:postgresql://postgres:5432/${FORGEPILOT_DB_NAME:-forgepilot}
+      FORGEPILOT_DB_USER: ${FORGEPILOT_DB_USER:-forgepilot}
+      FORGEPILOT_DB_PASSWORD: ${FORGEPILOT_DB_PASSWORD:-forgepilot}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     volumes:
       - forgepilot-data:/var/lib/forgepilot
 
 volumes:
   forgepilot-data:
+  forgepilot-postgres:
