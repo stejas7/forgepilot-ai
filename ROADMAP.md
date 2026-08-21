@@ -21,7 +21,7 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - GitHub Actions CI/CD
 - AWS EC2 runtime and health verification
 
-## P1 — Lovable-style Dashboard — NOW
+## P1 — Lovable-style Dashboard — DONE
 - creator-first dashboard replaces developer-console landing page
 - workspace selector and collapsible sidebar
 - Dashboard, Search, Resources, Connectors
@@ -36,19 +36,19 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - command palette / keyboard shortcuts
 - account/settings/inbox surfaces
 
-## P2 — Prompt → Project → AI Conversation
+## P2 — Prompt → Project → AI Conversation — DONE
 - submitting dashboard prompt creates/opens a project
 - persistent projects and workspace state
 - persistent chat sessions/messages
 - Plan mode with editable structured plan and approval
-- Build/Agent mode with real code changes
-- streaming execution/status events
+- Build/Agent mode with real workspace changes and recoverable snapshots
+- streaming execution/status events wired into the creator UI
 - follow-up prompts modify the existing project
-- attachments and image context
+- dashboard and builder attachments with text/image AI context
 - cancel/retry
 - usage accounting
 
-## P3 — Builder Experience + Working Preview
+## P3 — Builder Experience + Working Preview — NOW
 - project builder centered on the generated application
 - AI conversation panel
 - true generated-app preview, not a mock preview card
@@ -212,12 +212,12 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 
 ## Immediate implementation sequence
 
-1. Rebuild the current frontend shell as **P1 creator dashboard**.
-2. Wire dashboard prompt directly into **P2 project creation + persistent AI conversation**.
-3. Make the project screen **P3 preview-first builder**.
-4. Add **P4 Visual Editing** before expanding developer-oriented panels.
-5. Complete **P5 Code + Version History** as secondary power-user tooling.
-6. Implement **P6 full-stack backend**, then **P7 GitHub**, **P8 Connectors**, and **P9 Publish**.
+1. P1 creator dashboard — complete.
+2. P2 project creation + persistent AI conversation — complete.
+3. **NOW: P3 preview-first builder with isolated executable generated-app runtime.**
+4. Add P4 Visual Editing before expanding developer-oriented panels.
+5. Complete P5 Code + Version History as secondary power-user tooling.
+6. Implement P6 full-stack backend, then P7 GitHub, P8 Connectors, and P9 Publish.
 7. Complete collaboration, security, knowledge/agent and enterprise layers.
 8. Run P14 parity audit; remaining gaps must be explicitly recorded and closed.
 
