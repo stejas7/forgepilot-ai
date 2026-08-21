@@ -27,16 +27,19 @@ public class BuildModeController {
     private final ConversationService conversationService;
     private final PlanService planService;
     private final UsageService usageService;
+    private final AttachmentService attachmentService;
 
     public BuildModeController(ProjectService projectService, OpenAiGateway openAiGateway,
                                WorkspaceService workspaceService, ConversationService conversationService,
-                               PlanService planService, UsageService usageService) {
+                               PlanService planService, UsageService usageService,
+                               AttachmentService attachmentService) {
         this.projectService = projectService;
         this.openAiGateway = openAiGateway;
         this.workspaceService = workspaceService;
         this.conversationService = conversationService;
         this.planService = planService;
         this.usageService = usageService;
+        this.attachmentService = attachmentService;
     }
 
     @GetMapping("/runtime")
@@ -46,14 +49,14 @@ public class BuildModeController {
     public AgentResponse plan(@Valid @RequestBody AgentRequest request) {
         Project project = projectService.updateStatus(request.projectId(), Project.ProjectStatus.PLANNING);
         conversationService.addUser(project.id(), "PLAN", request.prompt());
-        Generated generated = generate(PLAN_SYSTEM, request.prompt(), "Plan prepared in deterministic demo mode.");
+        Generated generated = generate(project.id(), PLAN_SYSTEM, request.prompt(), "Plan prepared in deterministic demo mode.");
         planService.saveDraft(project.id(), generated.text());
         conversationService.addAssistant(project.id(), "PLAN", generated.text());
         usageService.record(project.id(), generated.inputTokens(), generated.outputTokens());
         return new AgentResponse("PLAN", project.id(), request.prompt(), List.of(
                 "Analyze requested product behavior and actors",
+                "Read attached text/image context",
                 "Define screens, domain model and API contracts",
-                "Define implementation tasks and acceptance checks",
                 "Save editable project plan without changing files"), generated.text(), Instant.now());
     }
 
@@ -61,24 +64,24 @@ public class BuildModeController {
     public AgentResponse build(@Valid @RequestBody AgentRequest request) {
         Project project = projectService.updateStatus(request.projectId(), Project.ProjectStatus.BUILDING);
         conversationService.addUser(project.id(), "BUILD", request.prompt());
-        Generated generated = generate(BUILD_SYSTEM, request.prompt(), "Build change-set prepared in deterministic demo mode.");
+        Generated generated = generate(project.id(), BUILD_SYSTEM, request.prompt(), "Build change-set prepared in deterministic demo mode.");
         workspaceService.seedGeneratedApplication(project.id(), request.prompt(), generated.text());
         workspaceService.snapshot(project.id(), "AI build: " + summarize(request.prompt()));
         projectService.updateStatus(project.id(), Project.ProjectStatus.READY);
         conversationService.addAssistant(project.id(), "BUILD", generated.text());
         usageService.record(project.id(), generated.inputTokens(), generated.outputTokens());
         return new AgentResponse("BUILD", project.id(), request.prompt(), List.of(
-                "Load current project context",
+                "Load current project and attachment context",
                 "Generate implementation change-set",
                 "Write generated files to workspace",
                 "Create recoverable version snapshot",
                 "Mark project ready for preview"), generated.text(), Instant.now());
     }
 
-    private Generated generate(String system, String prompt, String fallback) {
+    private Generated generate(UUID projectId, String system, String prompt, String fallback) {
         if (!openAiGateway.configured()) return new Generated(fallback + " Add OPENAI_API_KEY to enable live AI generation.", 0, 0);
         try {
-            OpenAiGateway.GenerationResult result = openAiGateway.generateWithUsage(system, prompt);
+            OpenAiGateway.GenerationResult result = openAiGateway.generateWithUsage(system, prompt, attachmentService.list(projectId));
             return new Generated(result.text(), result.inputTokens(), result.outputTokens());
         } catch (RuntimeException exception) {
             return new Generated(fallback + " Live AI request failed safely: " + exception.getMessage(), 0, 0);
