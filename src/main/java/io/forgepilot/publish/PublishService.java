@@ -3,6 +3,7 @@ package io.forgepilot.publish;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.forgepilot.enterprise.EnterpriseGovernanceService;
 import io.forgepilot.platform.PlatformStateStore;
+import io.forgepilot.security.SecurityScanService;
 import io.forgepilot.workspace.WorkspaceService;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +21,11 @@ public class PublishService {
     private final PlatformStateStore store;
     private final WorkspaceService workspace;
     private final EnterpriseGovernanceService governance;
+    private final SecurityScanService security;
     private final Map<UUID,List<Release>> releases;
 
-    public PublishService(PlatformStateStore store, WorkspaceService workspace, EnterpriseGovernanceService governance) {
-        this.store=store; this.workspace=workspace; this.governance=governance;
+    public PublishService(PlatformStateStore store, WorkspaceService workspace, EnterpriseGovernanceService governance, SecurityScanService security) {
+        this.store=store; this.workspace=workspace; this.governance=governance; this.security=security;
         this.releases=new LinkedHashMap<>(store.read(STATE,new TypeReference<Map<UUID,List<Release>>>(){},LinkedHashMap::new));
     }
 
@@ -45,10 +47,12 @@ public class PublishService {
     public synchronized Release publish(UUID projectId,UUID releaseId,String actor){
         Release current=find(projectId,releaseId);
         if(!"READY".equals(current.status()) && !"PUBLISHED".equals(current.status())) throw new IllegalStateException("Release requires approval before publish");
+        SecurityScanService.GateDecision gate=security.gate(projectId);
+        if(!gate.allowed()) throw new IllegalStateException(gate.message());
         List<Release> list=releases.get(projectId);
         for(int i=0;i<list.size();i++){Release r=list.get(i); if(r.published()) list.set(i,copy(r,r.status(),false,r.approvedBy(),r.publishedAt()));}
         Release updated=copy(current,"PUBLISHED",true,current.approvedBy(),Instant.now());replace(projectId,updated);persist();
-        governance.append("PUBLISHED",projectId.toString(),Map.of("release",releaseId.toString(),"actor",actor));return updated;
+        governance.append("PUBLISHED",projectId.toString(),Map.of("release",releaseId.toString(),"actor",actor,"securityScanId",String.valueOf(gate.scanId())));return updated;
     }
 
     public synchronized Release rollback(UUID projectId,UUID releaseId,String actor){
