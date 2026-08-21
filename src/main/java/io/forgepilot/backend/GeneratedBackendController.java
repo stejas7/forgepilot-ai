@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +26,7 @@ public class GeneratedBackendController {
     @PutMapping("/auth") public GeneratedBackendService.BackendProject auth(@PathVariable UUID projectId,@RequestBody AuthRequest request){ return service.configureAuth(projectId,request.emailPassword(),request.oauth(),request.rbac()); }
     @PutMapping("/secrets") public GeneratedBackendService.BackendProject secret(@PathVariable UUID projectId,@Valid @RequestBody SecretRequest request){ return service.putSecret(projectId,request.name(),request.value()); }
     @PostMapping("/tables") public GeneratedBackendService.BackendProject table(@PathVariable UUID projectId,@Valid @RequestBody TableRequest request){ return service.registerTable(projectId,request.name(),request.columns()); }
+    @GetMapping("/tables/{table}/rows") public List<Map<String,Object>> rows(@PathVariable UUID projectId,@PathVariable String table,@RequestParam(defaultValue="50") int limit){ return service.rows(projectId,table,limit); }
     @GetMapping("/logs") public List<String> logs(@PathVariable UUID projectId){ return service.logs(projectId); }
 
     public record AuthRequest(boolean emailPassword,boolean oauth,boolean rbac){}
