@@ -9,3 +9,9 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       FORGEPILOT_AI_MODEL: ${FORGEPILOT_AI_MODEL:-gpt-5.6-luna}
+      FORGEPILOT_DATA_DIR: /var/lib/forgepilot
+    volumes:
+      - forgepilot-data:/var/lib/forgepilot
+
+volumes:
+  forgepilot-data:
