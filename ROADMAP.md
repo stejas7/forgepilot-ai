@@ -12,6 +12,7 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - Build/Agent mode changes the project and verifies the result.
 - Every generated change creates recoverable history.
 - `main` stays releasable; CI and EC2 health must remain green.
+- Enterprise compliance claims are evidence-driven: controls may be implemented in product, but certifications such as SOC 2 or ISO 27001 are never claimed unless independently achieved.
 
 ## P0 — Runtime Foundation — DONE
 - Java 21 / Spring Boot platform API
@@ -48,7 +49,7 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - cancel/retry
 - usage accounting
 
-## P3 — Builder Experience + Working Preview — NOW
+## P3 — Builder Experience + Working Preview
 - project builder centered on the generated application
 - AI conversation panel
 - true generated-app preview, not a mock preview card
@@ -91,8 +92,9 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - restore/revert
 - edit/replay earlier prompt from a version
 
-## P6 — Full-stack Backend
+## P6 — Full-stack Backend — IN PROGRESS
 - managed PostgreSQL-backed generated applications
+- per-project database isolation
 - schema generation and migrations
 - data/table browser
 - authentication
@@ -106,7 +108,7 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - backend/runtime logs
 - backend changes driven from the same AI conversation
 
-## P7 — GitHub Ownership + Two-way Sync
+## P7 — GitHub Ownership + Two-way Sync — IN PROGRESS
 - connect GitHub account/repository
 - create or connect repo
 - export complete generated code
@@ -118,13 +120,19 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - sync/status UI
 - disconnect/reconnect safely
 
-## P8 — Connectors + Integrations
+## P8 — Connectors + Integrations — IN PROGRESS
 - Connectors catalog from dashboard and builder
 - OAuth/API-key connector framework
 - project/app connectors
 - context/chat connectors
+- app-user/per-user connectors with source-system permissions preserved
+- centrally configured workspace connectors
+- connector allowlists and role-based connector access
 - Stripe/payments
 - email provider integration
+- Jira / Confluence / Notion / Linear style context connectors
+- n8n / Miro style workflow/design connectors
+- CRM / database / enterprise-system connectors
 - external REST/GraphQL APIs
 - webhooks
 - analytics/storage/provider integrations
@@ -146,11 +154,14 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - SEO/accessibility review
 - deployment progress/logs/history
 - rollback
+- enterprise publishing approval policy
+- separate edit / approve / publish permissions
+- environment-aware publishing controls
 
 ## P10 — Collaboration + Workspace
 - workspace members
 - project sharing/access
-- owner/admin/editor/viewer-style roles
+- owner/admin/editor/viewer/approver/publisher roles
 - invitations/access requests
 - comments/annotations
 - activity/audit history
@@ -158,6 +169,8 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - notifications/inbox
 - concurrent editing foundation
 - workspace settings
+- workspace-level brand/design-system consistency
+- reusable company authentication profile for generated apps
 
 ## P11 — Security + Quality
 - browser/E2E verification of generated apps
@@ -166,10 +179,18 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - secret scanning
 - SAST/security agent
 - auth/database policy review
+- database/RLS/cloud configuration checks
 - accessibility checks
-- publish security gate/report
-- remediation through AI conversation
-- security history/trust summary
+- automatic basic security scan before publish
+- on-demand deep security scan
+- recurring deep scans for enterprise workspaces
+- optional safe auto-fix for non-breaking findings
+- policy gate that can block publish on critical findings
+- security history
+- generated-app Trust Center/security summary
+- WAF/rate-limit/network-isolation readiness controls
+- abuse/risk monitoring hooks
+- external security-provider integration surface such as Wiz
 
 ## P12 — Knowledge, Templates + Advanced Agent
 - templates/gallery/remix workflow
@@ -183,16 +204,38 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - MCP client/server capabilities
 - external agent/tool integrations
 
-## P13 — Enterprise + Administration
-- SSO/SAML-ready architecture
-- SCIM-ready provisioning
-- organization policies
-- audit export/retention controls
+## P13 — Enterprise Governance + Administration
+- enterprise admin console
+- workspace-wide application inventory
+- Workspace Insights dashboard
+- total-project / externally-published / review-priority metrics
+- filters for PII projects, abandoned apps, open findings and missing owners
+- SSO with SAML and OIDC providers
+- Okta / Azure AD / Google-ready identity provider configuration
+- SCIM provisioning/deprovisioning
+- server-enforced workspace RBAC
+- centralized role/policy management
+- project visibility policy and private-by-default options
+- editing / approval / publishing permission separation
+- centralized workspace connector policy
 - connector/model allowlists
+- organization policies
+- centralized secrets policy
+- immutable/append-only audit events
+- audit search/export
+- audit retention controls
+- publishing policies and approval gates
+- workspace-level brand consistency and design-system policy
+- reusable workspace authentication configuration
 - usage quotas/budgets
 - model routing and cost reporting
-- admin console
-- internal publishing policies
+- abandoned-project cleanup and ownership reassignment workflow
+- company-wide Security Center
+- scheduled security scans across projects
+- governance view of generated databases, published endpoints and sensitive-data exposure
+- legal/compliance resource surfaces for DPA, subprocessors, security docs and change log
+- enterprise support/onboarding resource area and escalation metadata
+- no certification badges unless independently achieved
 
 ## P14 — Final Lovable-style Parity Audit
 - compare Dashboard workflow capability-by-capability
@@ -203,9 +246,11 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - compare code/version history
 - compare backend/auth/storage
 - compare GitHub sync
-- compare connectors
-- compare Publish/share/domain flow
+- compare connectors and app-user connectors
+- compare Publish/share/domain and approval flow
 - compare collaboration/workspace controls
+- compare enterprise dashboard, SSO/SCIM/RBAC, audit, connector governance and Workspace Insights
+- compare security scan/publish-gate/Trust Center workflows
 - remove dead controls and developer-console-first UX
 - responsive and performance review
 - security review
@@ -214,13 +259,16 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 
 1. P1 creator dashboard — complete.
 2. P2 project creation + persistent AI conversation — complete.
-3. **NOW: P3 preview-first builder with isolated executable generated-app runtime.**
-4. Add P4 Visual Editing before expanding developer-oriented panels.
-5. Complete P5 Code + Version History as secondary power-user tooling.
-6. Implement P6 full-stack backend, then P7 GitHub, P8 Connectors, and P9 Publish.
-7. Complete collaboration, security, knowledge/agent and enterprise layers.
-8. Run P14 parity audit; remaining gaps must be explicitly recorded and closed.
+3. Complete P3/P4 regression hardening.
+4. Complete P5 Code + Version History.
+5. **NOW: finish P6 PostgreSQL/full-stack backend, P7 GitHub conflict-aware sync, and P8 connector framework.**
+6. Implement P9 publishing/approval controls.
+7. Implement P10 collaboration/workspace roles.
+8. Implement P11 security scans, publish gates and Trust Center.
+9. Implement P12 knowledge/advanced agent.
+10. Implement the full P13 enterprise governance suite described above.
+11. Run P14 parity audit; remaining gaps must be explicitly recorded and closed.
 
 ## Definition of Done
 
-ForgePilot is complete only when the creator journey works end-to-end: a user can enter from the dashboard, describe an app, plan or build it, see a real working preview, iterate conversationally and visually, add backend/integrations, recover versions, own/sync code through GitHub, publish a controlled live snapshot, and collaborate. UI placeholders do not count as completed functionality.
+ForgePilot is complete only when the creator journey works end-to-end: a user can enter from the dashboard, describe an app, plan or build it, see a real working preview, iterate conversationally and visually, add backend/integrations, recover versions, own/sync code through GitHub, publish a controlled live snapshot, collaborate, and operate under enterprise identity, governance, security and audit controls. UI placeholders do not count as completed functionality.
