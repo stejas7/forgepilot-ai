@@ -1,285 +1,226 @@
-# ForgePilot AI — Full Product Roadmap
+# ForgePilot AI — Product Roadmap
 
-ForgePilot independently targets the complete internal AI application-builder workflow represented by modern products such as Lovable. We reproduce capabilities and workflows, not proprietary source code, prompts, branding or protected assets.
+ForgePilot is an internal AI app builder. The product goal is a simple creator-first journey: **Dashboard → Prompt → Plan/Build → Working App Preview → Iterate → Visual Edit → Backend/Connectors → GitHub → Publish**.
 
-## Delivery contract
+ForgePilot independently implements comparable workflows and capabilities. It does not copy third-party proprietary source code, private prompts, branding, logos, or protected assets.
 
-- Implement milestones sequentially on `main`.
-- Keep `main` releasable and EC2 deployable.
-- A UI placeholder is **not** considered implemented.
-- Every feature must have a real backend/runtime path where applicable.
-- Each milestone ends with CI green + EC2 runtime verification.
-- Preserve existing working functionality while adding the next milestone.
+## Product rules
 
-## M0 — Green Foundation — IMPLEMENTED
-- Java 21 / Spring Boot API
-- React/TypeScript builder shell
-- Docker production image
-- GitHub Actions CI
-- GHCR image publishing
-- AWS EC2 deployment
-- health/runtime verification
+- The generated application and AI conversation are the primary experience; engineering machinery stays secondary.
+- A visible button/tab is never considered implemented unless the underlying action works.
+- Plan mode reasons and proposes without changing code.
+- Build/Agent mode changes the project and verifies the result.
+- Every generated change creates recoverable history.
+- `main` stays releasable; CI and EC2 health must remain green.
+
+## P0 — Runtime Foundation — DONE
+- Java 21 / Spring Boot platform API
+- React/TypeScript web shell
 - OpenAI server-side integration
+- Docker/GHCR
+- GitHub Actions CI/CD
+- AWS EC2 runtime and health verification
 
-## M1 — Projects + Persistent Workspace — IN PROGRESS
-- project CRUD
-- persistent project/workspace model
-- project settings and visibility
-- workspace file persistence
-- audit events
-- PostgreSQL-backed platform persistence
-- remove remaining in-memory production state
+## P1 — Lovable-style Dashboard — NOW
+- creator-first dashboard replaces developer-console landing page
+- workspace selector and collapsible sidebar
+- Dashboard, Search, Resources, Connectors
+- All projects, Starred, Created by me, Shared with me
+- Recents
+- central "What do you want to build?" prompt
+- Build / Plan selector
+- attachment/image/screenshot entry point
+- connector/design/template entry points
+- templates/resources gallery
+- project cards and search/filter/sort
+- command palette / keyboard shortcuts
+- account/settings/inbox surfaces
 
-## M2 — AI Conversation / Plan / Build
-- persistent chat sessions and messages
-- Plan mode
-- Build mode
-- structured plans
-- streaming generation events
-- model selection/routing
-- prompt/context management
-- follow-up change requests
-- cancellation/retry
-- usage/token accounting
+## P2 — Prompt → Project → AI Conversation
+- submitting dashboard prompt creates/opens a project
+- persistent projects and workspace state
+- persistent chat sessions/messages
+- Plan mode with editable structured plan and approval
+- Build/Agent mode with real code changes
+- streaming execution/status events
+- follow-up prompts modify the existing project
+- attachments and image context
+- cancel/retry
+- usage accounting
 
-## M3 — Real Code Workspace
-- generated filesystem abstraction
-- file tree
-- file search
-- read/write/create/delete/rename files
-- Monaco editor
-- syntax highlighting
-- save edited files
-- dirty-state tracking
-- targeted file/code context
-- multi-file selection
-- attachments
-- image/screenshot input
-- import document/context files
-
-## M4 — Sandbox + True Live Preview
-- isolated per-project execution sandbox
-- dependency installation
-- build/run commands
-- runtime logs
-- generated application process lifecycle
-- real preview URL/proxy
-- refresh/restart
-- desktop/tablet/mobile viewport modes
-- open preview in new tab
+## P3 — Builder Experience + Working Preview
+- project builder centered on the generated application
+- AI conversation panel
+- true generated-app preview, not a mock preview card
+- isolated project runtime/sandbox
+- dependency install/build/run
+- runtime/build logs
+- preview refresh/restart
+- desktop/tablet/mobile preview
+- open preview separately
+- page navigation
 - error overlay
-- resource/network/time limits
+- automatic compile/runtime verification
+- AI repair loop
 
-## M5 — Agentic Generation + Automatic Repair
-- orchestrator
-- frontend agent
-- backend agent
-- database agent
-- test agent
-- reviewer agent
-- parallel subagents
-- tool execution
-- compile/build validation
-- runtime validation
-- automatic error diagnosis
-- repair loop
-- user-visible execution timeline
-
-## M6 — Version History + GitHub Sync
-- automatic snapshots
-- named versions
-- file-level diff
-- version diff
-- restore/revert
-- GitHub OAuth/App connection
-- create/connect repository
-- commit
-- branch
-- push
-- pull
-- conflict detection
-- conflict resolution
-- two-way synchronization
-- GitHub status in builder
-
-## M7 — Generated Backend Platform
-- PostgreSQL provisioning
-- schema generation
-- migrations
-- data browser/table editor
-- generated REST APIs
-- server functions
-- authentication
-- email/password login
-- social/OAuth login
-- session management
-- generated RBAC
-- row-level access policies
-- object/file storage
-- realtime subscriptions
-- secrets/environment variables
-- backend logs
-
-## M8 — Visual / Design Builder
-- preview DOM/component bridge
-- click-to-select element
-- component hierarchy
-- visual property inspector
+## P4 — Visual Editing
+- click/select elements directly in preview
+- stable element/component targeting
 - text editing
-- typography
-- colors
-- spacing
-- sizing
-- borders/radius/shadows
-- flex/grid/layout
-- visibility
+- color/typography/spacing/layout/style controls
 - responsive overrides
-- drag/reorder where safe
-- comments/annotations
+- targeted prompt against selected component
+- source-code changes generated from visual edits
+- instant preview refresh
 - undo/redo
-- design-system tokens
-- reusable components
-- screenshot-to-design context
-- Figma/design import workflow
+- reusable design tokens/components
+- screenshot/design context
 
-## M9 — Integrations + Payments
-- integration catalog
-- API-key based connectors
-- OAuth connectors
-- Stripe/payment integration
+## P5 — Code + Version History
+- secondary Code view
+- real file tree/search
+- Monaco editor
+- create/read/update/delete/rename files
+- save and dirty-state handling
+- targeted file context for AI
+- automatic snapshots for AI/manual/visual changes
+- history timeline
+- bookmarks/named versions
+- file/version diff
+- preview older version
+- restore/revert
+- edit/replay earlier prompt from a version
+
+## P6 — Full-stack Backend
+- managed PostgreSQL-backed generated applications
+- schema generation and migrations
+- data/table browser
+- authentication
+- email/password and supported OAuth flows
+- sessions
+- generated RBAC / data-access policies
+- storage/uploads
+- realtime capabilities
+- generated APIs/server functions
+- project secrets/environment variables
+- backend/runtime logs
+- backend changes driven from the same AI conversation
+
+## P7 — GitHub Ownership + Two-way Sync
+- connect GitHub account/repository
+- create or connect repo
+- export complete generated code
+- commits from ForgePilot changes
+- default-branch two-way synchronization
+- pull external GitHub edits back into ForgePilot
+- conflict detection/resolution
+- branch awareness
+- sync/status UI
+- disconnect/reconnect safely
+
+## P8 — Connectors + Integrations
+- Connectors catalog from dashboard and builder
+- OAuth/API-key connector framework
+- project/app connectors
+- context/chat connectors
+- Stripe/payments
 - email provider integration
-- storage/provider integrations
-- analytics integration
-- webhook configuration
 - external REST/GraphQL APIs
-- custom connector definitions
-- connector secrets
-- integration health/status
+- webhooks
+- analytics/storage/provider integrations
+- connector secrets and permissions
+- connection health/status
 
-## M10 — Validation + Security
-- unit test generation/execution
-- integration tests
-- browser/E2E tests
-- accessibility checks
-- dependency vulnerability scanning
-- secret scanning
-- SAST/security agent
-- auth/RBAC review
-- database policy review
-- deployment readiness report
-- automatic remediation suggestions
-- policy gates
-- security history
-- Trust Center style security summary for published apps
-
-## M11 — Publishing + Domains
-- one-click Publish
-- immutable releases
-- deployment progress
-- deployment logs
-- release history
-- rollback
-- preview/staging/production environments
-- environment variables per environment
-- generated public URL
+## P9 — Publish + Share
+- one-click Publish from builder top bar
+- publish immutable current snapshot
+- generated shareable app URL
+- Update/republish after later edits
+- unpublish
+- project/editor access separate from published-app access
+- internal/workspace vs public access
 - custom domains
 - DNS verification
 - TLS/SSL
-- SPA routing
-- SEO metadata
-- favicon/social metadata
-- health monitoring
-- publish/unpublish
+- site title/favicon/description/social image
+- SEO/accessibility review
+- deployment progress/logs/history
+- rollback
 
-## M12 — Knowledge + Skills + RAG
-- project knowledge
-- workspace/org knowledge
-- persistent instructions
-- reusable skills
-- reusable prompt rules
-- RAG ingestion
-- document indexing
-- semantic retrieval
-- knowledge source management
-- context visibility/debugging
-- templates
-- starter applications
-- reusable design systems
-
-## M13 — Collaboration
-- users/members
-- invite flow
-- project sharing
-- owner/admin/developer/viewer roles
-- permissions
-- comments
-- annotations
-- activity feed
-- audit history
+## P10 — Collaboration + Workspace
+- workspace members
+- project sharing/access
+- owner/admin/editor/viewer-style roles
+- invitations/access requests
+- comments/annotations
+- activity/audit history
+- folders
+- notifications/inbox
 - concurrent editing foundation
-- team/workspace organization
+- workspace settings
 
-## M14 — Enterprise Governance
+## P11 — Security + Quality
+- browser/E2E verification of generated apps
+- unit/integration test generation
+- dependency vulnerability scanning
+- secret scanning
+- SAST/security agent
+- auth/database policy review
+- accessibility checks
+- publish security gate/report
+- remediation through AI conversation
+- security history/trust summary
+
+## P12 — Knowledge, Templates + Advanced Agent
+- templates/gallery/remix workflow
+- design systems
+- project/workspace knowledge
+- reusable instructions/skills
+- RAG ingestion/retrieval
+- autonomous multi-step agent execution
+- queued prompts
+- specialized subagents
+- MCP client/server capabilities
+- external agent/tool integrations
+
+## P13 — Enterprise + Administration
 - SSO/SAML-ready architecture
 - SCIM-ready provisioning
 - organization policies
-- centralized secrets policies
-- model allowlists
-- connector allowlists
-- audit export
-- retention controls
-- usage quotas
-- budgets
-- model routing
-- cost reporting
+- audit export/retention controls
+- connector/model allowlists
+- usage quotas/budgets
+- model routing and cost reporting
 - admin console
+- internal publishing policies
 
-## M15 — MCP + Agent Ecosystem
-- MCP client support
-- MCP server for ForgePilot tooling
-- expose published application capabilities through MCP where configured
-- external agent integrations
-- scoped tool permissions
-- agent credentials
-- tool discovery
-- invocation audit logs
-
-## M16 — Product Polish / Parity Review
-- onboarding
-- templates/gallery
-- keyboard shortcuts
-- command palette
-- responsive builder UI
-- loading/error/empty states
-- notifications/toasts
-- account/settings UX
-- usage dashboard
-- billing/credit abstraction for internal quotas
-- documentation/help surfaces
-- full capability-by-capability parity audit
-- remove remaining placeholders/dead controls
-- performance/load review
+## P14 — Final Lovable-style Parity Audit
+- compare Dashboard workflow capability-by-capability
+- compare project creation flow
+- compare Plan vs Build/Agent behavior
+- compare generated-app preview/iteration
+- compare Visual Editing
+- compare code/version history
+- compare backend/auth/storage
+- compare GitHub sync
+- compare connectors
+- compare Publish/share/domain flow
+- compare collaboration/workspace controls
+- remove dead controls and developer-console-first UX
+- responsive and performance review
 - security review
 
-## Immediate sequential implementation queue
+## Immediate implementation sequence
 
-1. Finish M1 persistent workspace.
-2. Complete M2 persistent AI conversation and follow-up edits.
-3. Complete M3 editable code workspace.
-4. Build M4 true executable live preview.
-5. Add M5 validation/repair agents.
-6. Complete M6 GitHub synchronization and version diff.
-7. Implement M7 real backend/auth/storage platform.
-8. Implement M8 visual editor.
-9. Implement M9 integrations/payments.
-10. Implement M10 validation/security.
-11. Implement M11 full publishing/domain platform.
-12. Implement M12 knowledge/skills/RAG.
-13. Implement M13 collaboration.
-14. Implement M14 enterprise governance.
-15. Implement M15 MCP/agent ecosystem.
-16. Finish M16 parity/polish audit.
+1. Rebuild the current frontend shell as **P1 creator dashboard**.
+2. Wire dashboard prompt directly into **P2 project creation + persistent AI conversation**.
+3. Make the project screen **P3 preview-first builder**.
+4. Add **P4 Visual Editing** before expanding developer-oriented panels.
+5. Complete **P5 Code + Version History** as secondary power-user tooling.
+6. Implement **P6 full-stack backend**, then **P7 GitHub**, **P8 Connectors**, and **P9 Publish**.
+7. Complete collaboration, security, knowledge/agent and enterprise layers.
+8. Run P14 parity audit; remaining gaps must be explicitly recorded and closed.
 
 ## Definition of Done
 
-A milestone is complete only when functionality is real (not merely visible), relevant tests/build checks pass, documentation is updated, CI is green, and the deployed EC2 runtime is verified. The final parity review must explicitly compare every supported workflow against the reference capability matrix and identify any remaining gap before ForgePilot is declared complete.
+ForgePilot is complete only when the creator journey works end-to-end: a user can enter from the dashboard, describe an app, plan or build it, see a real working preview, iterate conversationally and visually, add backend/integrations, recover versions, own/sync code through GitHub, publish a controlled live snapshot, and collaborate. UI placeholders do not count as completed functionality.
