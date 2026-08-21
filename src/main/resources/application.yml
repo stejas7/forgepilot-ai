@@ -14,3 +14,18 @@ management:
 
 server:
   shutdown: graceful
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: ${FORGEPILOT_SESSION_TIMEOUT:30m}
+      cookie:
+        http-only: true
+        same-site: lax
+
+forgepilot:
+  auth:
+    oauth-enabled: ${FORGEPILOT_AUTH_OAUTH_ENABLED:false}
+    sso-required: ${FORGEPILOT_AUTH_SSO_REQUIRED:false}
+    public-url: ${FORGEPILOT_PUBLIC_URL:}
+    approved-domains: ${FORGEPILOT_APPROVED_DOMAINS:}
+    admin-emails: ${FORGEPILOT_ADMIN_EMAILS:}
