@@ -11,7 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory project file workspace with recoverable snapshots.
+ * Project file workspace with recoverable snapshots.
  *
  * @author Tejas Shah
  */
@@ -66,6 +66,8 @@ public class WorkspaceService {
 
     public synchronized void seedGeneratedApplication(UUID projectId, String prompt, String buildSummary) {
         LinkedHashMap<String, String> files = files(projectId);
+        String safePrompt = escape(prompt);
+        String safeHtmlPrompt = escapeHtml(prompt);
         files.put("src/App.tsx", """
                 export default function App() {
                   return (
@@ -75,8 +77,29 @@ public class WorkspaceService {
                     </main>
                   )
                 }
-                """.formatted(escape(prompt)));
+                """.formatted(safePrompt));
         files.put("src/styles.css", "body { font-family: Inter, system-ui, sans-serif; margin: 0; }\nmain { padding: 32px; }\n");
+        files.put("preview/index.html", """
+                <!doctype html>
+                <html lang="en">
+                <head>
+                  <meta charset="utf-8" />
+                  <meta name="viewport" content="width=device-width,initial-scale=1" />
+                  <title>ForgePilot Preview</title>
+                  <style>
+                    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f7f8fb;color:#17191f}
+                    .app{min-height:100vh;display:grid;grid-template-columns:210px 1fr}.nav{background:#12151d;color:#fff;padding:28px 20px}.nav h2{margin:0 0 28px}.nav span{display:block;padding:9px 10px;border-radius:8px;margin:4px 0;color:#cbd1dc}.nav span.active{background:#242a35;color:#fff}.main{padding:42px}.eyebrow{font-size:11px;letter-spacing:.14em;color:#8b92a0}.main h1{font-size:38px;margin:8px 0 10px}.main p{max-width:760px;color:#697180;line-height:1.6}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:30px 0}.card{background:#fff;border:1px solid #e5e8ee;border-radius:15px;padding:20px;box-shadow:0 8px 25px rgba(24,30,42,.05)}.card b{font-size:25px;display:block}.card span{font-size:12px;color:#7a8290}.panel{background:#fff;border:1px solid #e5e8ee;border-radius:15px;padding:22px}.cta{display:inline-block;margin-top:18px;border:0;background:#17191f;color:white;padding:11px 16px;border-radius:10px;font-weight:700}
+                    @media(max-width:720px){.app{grid-template-columns:1fr}.nav{display:none}.main{padding:24px}.stats{grid-template-columns:1fr}}
+                  </style>
+                </head>
+                <body>
+                  <div class="app">
+                    <aside class="nav"><h2>ForgePilot App</h2><span class="active">Dashboard</span><span>Customers</span><span>Workflows</span><span>Settings</span></aside>
+                    <main class="main"><div class="eyebrow">GENERATED APPLICATION</div><h1>Your app is taking shape</h1><p>%s</p><div class="stats"><div class="card"><b>1,284</b><span>Customers</span></div><div class="card"><b>87%%</b><span>Completion</span></div><div class="card"><b>24</b><span>Active workflows</span></div></div><section class="panel"><h3>Ready for the next prompt</h3><p>This preview is generated from the project workspace and refreshes after Build requests.</p><button class="cta">Primary action</button></section></main>
+                  </div>
+                </body>
+                </html>
+                """.formatted(safeHtmlPrompt));
         files.put("server/ApplicationController.java", """
                 package generated.app;
 
@@ -105,6 +128,15 @@ public class WorkspaceService {
 
     private String escape(String value) {
         return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ");
+    }
+
+    private String escapeHtml(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     public record WorkspaceFile(String path, String content) {}
