@@ -15,11 +15,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Plan/Build command surface for ForgePilot AI.
- *
- * @author Tejas Shah
- */
 @RestController
 @RequestMapping("/api/ai")
 public class BuildModeController {
@@ -43,16 +38,19 @@ public class BuildModeController {
     private final OpenAiGateway openAiGateway;
     private final WorkspaceService workspaceService;
     private final ConversationService conversationService;
+    private final PlanService planService;
 
     public BuildModeController(
             ProjectService projectService,
             OpenAiGateway openAiGateway,
             WorkspaceService workspaceService,
-            ConversationService conversationService) {
+            ConversationService conversationService,
+            PlanService planService) {
         this.projectService = projectService;
         this.openAiGateway = openAiGateway;
         this.workspaceService = workspaceService;
         this.conversationService = conversationService;
+        this.planService = planService;
     }
 
     @GetMapping("/runtime")
@@ -65,6 +63,7 @@ public class BuildModeController {
         Project project = projectService.updateStatus(request.projectId(), Project.ProjectStatus.PLANNING);
         conversationService.addUser(project.id(), "PLAN", request.prompt());
         String generated = generateOrFallback(PLAN_SYSTEM, request.prompt(), "Plan prepared in deterministic demo mode.");
+        planService.saveDraft(project.id(), generated);
         conversationService.addAssistant(project.id(), "PLAN", generated);
         return new AgentResponse(
                 "PLAN",
@@ -74,7 +73,7 @@ public class BuildModeController {
                         "Analyze requested product behavior and actors",
                         "Define screens, domain model and API contracts",
                         "Define implementation tasks and acceptance checks",
-                        "Preserve project state until Build is requested"),
+                        "Save editable project plan without changing files"),
                 generated,
                 Instant.now());
     }
@@ -119,14 +118,6 @@ public class BuildModeController {
     }
 
     public record AgentRequest(UUID projectId, @NotBlank(message = "prompt is required") String prompt) {}
-
-    public record AgentResponse(
-            String mode,
-            UUID projectId,
-            String prompt,
-            List<String> steps,
-            String message,
-            Instant createdAt) {}
-
+    public record AgentResponse(String mode, UUID projectId, String prompt, List<String> steps, String message, Instant createdAt) {}
     public record AiRuntime(boolean configured, String provider, String model) {}
 }
