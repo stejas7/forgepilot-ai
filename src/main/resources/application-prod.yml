@@ -1,0 +1,12 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: lax
+
+forgepilot:
+  auth:
+    sso-required: ${FORGEPILOT_AUTH_SSO_REQUIRED:true}
+    public-url: ${FORGEPILOT_PUBLIC_URL:https://forgepilot-ai.duckdns.org}
