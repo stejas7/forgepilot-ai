@@ -128,10 +128,18 @@ function Builder({project,prompt,setPrompt,mode,setMode,busy,activity,conversati
   const [viewport,setViewport]=useState<'desktop'|'tablet'|'mobile'>('desktop')
   const [files,setFiles]=useState<WorkspaceFile[]>([])
   const [selectedFile,setSelectedFile]=useState('')
+  const [draft,setDraft]=useState('')
+  const [dirty,setDirty]=useState(false)
+  const [saving,setSaving]=useState(false)
   const [refresh,setRefresh]=useState(0)
 
   useEffect(()=>{void loadFiles()},[project.id,conversation.length])
   useEffect(()=>{setRefresh(value=>value+1)},[conversation.length])
+  useEffect(()=>{
+    const file=files.find(item=>item.path===selectedFile)
+    setDraft(file?.content??'')
+    setDirty(false)
+  },[selectedFile,files])
 
   async function loadFiles(){
     const response=await fetch(`/api/projects/${project.id}/workspace/files`)
@@ -141,8 +149,20 @@ function Builder({project,prompt,setPrompt,mode,setMode,busy,activity,conversati
     if(data.length>0&&!data.some(file=>file.path===selectedFile))setSelectedFile(data[0].path)
   }
 
-  const previewUrl=`/api/projects/${project.id}/preview?v=${refresh}`
-  const selectedContent=files.find(file=>file.path===selectedFile)?.content??'// Run Build to generate project files.'
+  async function saveFile(){
+    if(!selectedFile||!dirty)return
+    setSaving(true)
+    try{
+      const response=await fetch(`/api/projects/${project.id}/workspace/files/${encodeURI(selectedFile)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:draft})})
+      if(!response.ok)throw new Error('Unable to save file')
+      await fetch(`/api/projects/${project.id}/workspace/versions`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({label:`Manual edit: ${selectedFile}`})})
+      await loadFiles()
+      setDirty(false)
+      if(selectedFile==='preview/index.html')setRefresh(value=>value+1)
+    }finally{setSaving(false)}
+  }
 
-  return <div className="builder-shell"><header className="builder-top"><button onClick={back}>← Dashboard</button><b>{project.name}</b><div><button>GitHub</button><button>Share</button><button className="publish">Publish</button></div></header><aside className="builder-chat"><div className="chat-title"><b>ForgePilot</b><span>{mode==='build'?'Agent':'Plan'}</span></div><div className="chat-body">{conversation.length===0?<div className="agent-message">Start by describing the change you want.</div>:conversation.map(message=><div key={message.id} className={message.role==='USER'?'user-prompt':'agent-message'}><small>{message.mode==='PLAN'?'Plan':'Build'}</small>{message.content}</div>)}{busy&&<div className="agent-message">ForgePilot is working…</div>}{activity.length>0&&<div className="execution-steps">{activity.map(step=><span key={step}>✓ {step}</span>)}</div>}</div><div className="builder-composer"><textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="Ask ForgePilot to make a change…" onKeyDown={e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')run()}}/><div><button onClick={()=>setMode(mode==='build'?'plan':'build')}>{mode==='build'?'Build':'Plan'}⌄</button><button className="send" disabled={busy||!prompt.trim()} onClick={run}>{busy?'…':'↑'}</button></div></div></aside><main className="live-preview"><div className="preview-top"><div><button className={tab==='preview'?'active':''} onClick={()=>setTab('preview')}>Preview</button><button className={tab==='code'?'active':''} onClick={()=>setTab('code')}>Code</button></div><div className="viewport-switch"><button className={viewport==='desktop'?'active':''} onClick={()=>setViewport('desktop')}>Desktop</button><button className={viewport==='tablet'?'active':''} onClick={()=>setViewport('tablet')}>Tablet</button><button className={viewport==='mobile'?'active':''} onClick={()=>setViewport('mobile')}>Mobile</button></div><div><button onClick={()=>setRefresh(value=>value+1)}>↻</button><button onClick={()=>window.open(previewUrl,'_blank')}>↗</button></div></div>{tab==='preview'?<div className="preview-stage"><div className={`preview-browser ${viewport}`}><iframe key={refresh} title={`${project.name} preview`} src={previewUrl}/></div></div>:<div className="builder-code"><aside>{files.length===0?<span>No files yet</span>:files.map(file=><button key={file.path} className={selectedFile===file.path?'active':''} onClick={()=>setSelectedFile(file.path)}>{file.path}</button>)}</aside><pre>{selectedContent}</pre></div>}</main></div>
+  const previewUrl=`/api/projects/${project.id}/preview?v=${refresh}`
+
+  return <div className="builder-shell"><header className="builder-top"><button onClick={back}>← Dashboard</button><b>{project.name}</b><div><button>GitHub</button><button>Share</button><button className="publish">Publish</button></div></header><aside className="builder-chat"><div className="chat-title"><b>ForgePilot</b><span>{mode==='build'?'Agent':'Plan'}</span></div><div className="chat-body">{conversation.length===0?<div className="agent-message">Start by describing the change you want.</div>:conversation.map(message=><div key={message.id} className={message.role==='USER'?'user-prompt':'agent-message'}><small>{message.mode==='PLAN'?'Plan':'Build'}</small>{message.content}</div>)}{busy&&<div className="agent-message">ForgePilot is working…</div>}{activity.length>0&&<div className="execution-steps">{activity.map(step=><span key={step}>✓ {step}</span>)}</div>}</div><div className="builder-composer"><textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="Ask ForgePilot to make a change…" onKeyDown={e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')run()}}/><div><button onClick={()=>setMode(mode==='build'?'plan':'build')}>{mode==='build'?'Build':'Plan'}⌄</button><button className="send" disabled={busy||!prompt.trim()} onClick={run}>{busy?'…':'↑'}</button></div></div></aside><main className="live-preview"><div className="preview-top"><div><button className={tab==='preview'?'active':''} onClick={()=>setTab('preview')}>Preview</button><button className={tab==='code'?'active':''} onClick={()=>setTab('code')}>Code</button></div><div className="viewport-switch"><button className={viewport==='desktop'?'active':''} onClick={()=>setViewport('desktop')}>Desktop</button><button className={viewport==='tablet'?'active':''} onClick={()=>setViewport('tablet')}>Tablet</button><button className={viewport==='mobile'?'active':''} onClick={()=>setViewport('mobile')}>Mobile</button></div><div><button onClick={()=>setRefresh(value=>value+1)}>↻</button><button onClick={()=>window.open(previewUrl,'_blank')}>↗</button></div></div>{tab==='preview'?<div className="preview-stage"><div className={`preview-browser ${viewport}`}><iframe key={refresh} title={`${project.name} preview`} src={previewUrl}/></div></div>:<div className="builder-code"><aside>{files.length===0?<span>No files yet</span>:files.map(file=><button key={file.path} className={selectedFile===file.path?'active':''} onClick={()=>setSelectedFile(file.path)}>{file.path}</button>)}</aside><section className="code-pane"><div className="code-toolbar"><span>{selectedFile||'No file selected'}{dirty?' • modified':''}</span><button disabled={!dirty||saving} onClick={()=>void saveFile()}>{saving?'Saving…':'Save'}</button></div><textarea value={draft} onChange={event=>{setDraft(event.target.value);setDirty(true)}} spellCheck={false}/></section></div>}</main></div>
 }
