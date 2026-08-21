@@ -19,13 +19,19 @@ public class SecurityConfig {
     @ConditionalOnProperty(name="forgepilot.auth.oauth-enabled",havingValue="true")
     static class OAuthSecurity {
         @Bean
-        SecurityFilterChain oauthSecurityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
-                .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/", "/index.html", "/assets/**", "/login", "/actuator/health", "/api/auth/providers", "/error").permitAll()
-                    .anyRequest().authenticated())
+        SecurityFilterChain oauthSecurityFilterChain(HttpSecurity http,
+                                                     WorkspaceAccessAuthorizationManager workspaceAccess) throws Exception {
+            http.authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/", "/index.html", "/assets/**", "/login", "/actuator/health", "/api/auth/providers", "/api/auth/readiness", "/error").permitAll()
+                    .requestMatchers("/oauth2/authorization/google", "/oauth2/authorization/github", "/login/oauth2/code/**").permitAll()
+                    .anyRequest().access(workspaceAccess))
                 .oauth2Login(oauth -> oauth.defaultSuccessUrl("/", true))
-                .logout(logout -> logout.logoutSuccessUrl("/"));
+                .logout(logout -> logout
+                    .logoutUrl("/logout")
+                    .invalidateHttpSession(true)
+                    .clearAuthentication(true)
+                    .deleteCookies("JSESSIONID")
+                    .logoutSuccessUrl("/"));
             return http.build();
         }
     }

@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,13 +18,22 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final ObjectProvider<ClientRegistrationRepository> registrations;
-    public AuthController(ObjectProvider<ClientRegistrationRepository> registrations){this.registrations=registrations;}
+    private final RoleMappingService roleMappingService;
+
+    public AuthController(ObjectProvider<ClientRegistrationRepository> registrations, RoleMappingService roleMappingService){
+        this.registrations=registrations;
+        this.roleMappingService=roleMappingService;
+    }
 
     @GetMapping("/me")
     public Map<String,Object> me(Authentication authentication){
-        return Map.of("authenticated", authentication != null && authentication.isAuthenticated(),
+        boolean authenticated=authentication != null && authentication.isAuthenticated();
+        Object principal=authentication == null ? null : authentication.getPrincipal();
+        List<String> roles=principal instanceof OAuth2User oauth2User ? roleMappingService.roles(oauth2User) : List.of();
+        return Map.of("authenticated", authenticated,
                 "name", authentication == null ? "" : authentication.getName(),
-                "authorities", authentication == null ? List.of() : authentication.getAuthorities().stream().map(Object::toString).toList());
+                "authorities", authentication == null ? List.of() : authentication.getAuthorities().stream().map(Object::toString).toList(),
+                "roles", roles);
     }
 
     @GetMapping("/providers")
