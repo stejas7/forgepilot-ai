@@ -30,12 +30,16 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Compile and package backend
-        run: mvn -B -DskipTests clean package
+      - name: Test and package backend
+        run: mvn -B clean verify
 
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm install --no-audit --no-fund
+
+      - name: Typecheck frontend
+        working-directory: frontend
+        run: npm run typecheck
 
       - name: Build frontend
         working-directory: frontend
