@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 public class SecurityConfig {
@@ -25,9 +26,11 @@ public class SecurityConfig {
                     .requestMatchers("/", "/index.html", "/assets/**", "/login", "/actuator/health", "/api/auth/providers", "/api/auth/readiness", "/error").permitAll()
                     .requestMatchers("/oauth2/authorization/google", "/oauth2/authorization/github", "/login/oauth2/code/**").permitAll()
                     .anyRequest().access(workspaceAccess))
-                .oauth2Login(oauth -> oauth.defaultSuccessUrl("/", true))
+                .oauth2Login(oauth -> oauth
+                    .defaultSuccessUrl("/", true)
+                    .failureUrl("/?authError=true"))
                 .logout(logout -> logout
-                    .logoutUrl("/logout")
+                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
                     .invalidateHttpSession(true)
                     .clearAuthentication(true)
                     .deleteCookies("JSESSIONID")
