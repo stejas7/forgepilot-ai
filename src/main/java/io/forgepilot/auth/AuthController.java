@@ -31,9 +31,21 @@ public class AuthController {
         Object principal=authentication == null ? null : authentication.getPrincipal();
         List<String> roles=principal instanceof OAuth2User oauth2User ? roleMappingService.roles(oauth2User) : List.of();
         return Map.of("authenticated", authenticated,
-                "name", authentication == null ? "" : authentication.getName(),
+                "name", displayName(authentication),
                 "authorities", authentication == null ? List.of() : authentication.getAuthorities().stream().map(Object::toString).toList(),
                 "roles", roles);
+    }
+
+    private String displayName(Authentication authentication) {
+        if (authentication == null) return "";
+        if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+            for (String key : List.of("name", "login", "preferred_username", "email")) {
+                Object value = oauth2User.getAttributes().get(key);
+                if (value != null && !value.toString().isBlank()) return value.toString().trim();
+            }
+        }
+        String name = authentication.getName();
+        return name == null ? "" : name.trim();
     }
 
     @GetMapping("/providers")
