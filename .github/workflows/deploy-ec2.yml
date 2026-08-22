@@ -41,8 +41,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GITHUB_OAUTH_CLIENT_ID: ${{ secrets.GITHUB_OAUTH_CLIENT_ID }}
-          GITHUB_OAUTH_CLIENT_SECRET: ${{ secrets.GITHUB_OAUTH_CLIENT_SECRET }}
+          GITHUB_OAUTH_CLIENT_ID: ${{ secrets.AI_GITHUB_OAUTH_CLIENT_ID }}
+          GITHUB_OAUTH_CLIENT_SECRET: ${{ secrets.AI_GITHUB_OAUTH_CLIENT_SECRET }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE: ghcr.io/${{ github.repository }}:${{ steps.commit.outputs.sha }}
           TESTED_SHA: ${{ steps.commit.outputs.sha }}
