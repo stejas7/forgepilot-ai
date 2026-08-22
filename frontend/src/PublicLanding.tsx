@@ -4,6 +4,7 @@ import EnterprisePage from './EnterprisePage'
 import SecurityTrustPage from './SecurityTrustPage'
 
 type Props={onAuthenticate:()=>void}
+type Mode='build'|'plan'
 
 const examples=[
   'Build an internal CRM with contacts, pipeline and activity tracking',
@@ -19,9 +20,9 @@ const resourceLinks=[
 ]
 
 export default function PublicLanding({onAuthenticate}:Props){
-  const [prompt,setPrompt]=useState(''),[route,setRoute]=useState(()=>routeFromHash())
+  const [prompt,setPrompt]=useState(''),[mode,setMode]=useState<Mode>('build'),[route,setRoute]=useState(()=>routeFromHash())
   useEffect(()=>{const onHash=()=>setRoute(routeFromHash());window.addEventListener('hashchange',onHash);return()=>window.removeEventListener('hashchange',onHash)},[])
-  function start(){const value=prompt.trim();if(value)sessionStorage.setItem('forgepilot.pendingPrompt',value);onAuthenticate()}
+  function start(){const value=prompt.trim();if(value){sessionStorage.setItem('forgepilot.pendingPrompt',value);sessionStorage.setItem('forgepilot.pendingMode',mode)}onAuthenticate()}
   function navigate(slug:string){window.location.hash=`/${slug}`}
   function home(){history.replaceState(null,'',window.location.pathname+window.location.search);setRoute('')}
   const content=hasPublicPage(route)
@@ -45,10 +46,10 @@ export default function PublicLanding({onAuthenticate}:Props){
         <h1>Describe the product.<br/>ForgePilot engineers the path.</h1>
         <p>Plan, build, review, secure and ship production applications from one AI-native engineering workspace.</p>
         <div className="public-prompt-card">
-          <textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="What do you want to build?" aria-label="Describe what you want ForgePilot to build"/>
-          <div className="public-prompt-footer"><span>Start with an idea — refine it after sign in.</span><button className="public-primary" disabled={!prompt.trim()} onClick={start}>Build with ForgePilot →</button></div>
+          <textarea value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder={mode==='plan'?'What should ForgePilot plan?':'What do you want ForgePilot to build?'} aria-label="Describe what you want ForgePilot to do"/>
+          <div className="public-prompt-footer"><div className="public-mode-switch" aria-label="Choose Build or Plan mode"><button className={mode==='build'?'selected':''} onClick={()=>setMode('build')}>Build</button><button className={mode==='plan'?'selected':''} onClick={()=>setMode('plan')}>Plan</button></div><span>{mode==='plan'?'Create architecture and implementation steps before code.':'Create the project and start implementation after sign in.'}</span><button className="public-primary" disabled={!prompt.trim()} onClick={start}>{mode==='plan'?'Create plan':'Build app'} →</button></div>
         </div>
-        <div className="public-examples">{examples.map(example=><button key={example} onClick={()=>setPrompt(example)}>{example}</button>)}</div>
+        <div className="public-examples">{examples.map(example=><button key={example} onClick={()=>{setPrompt(example);setMode(example.startsWith('Plan')?'plan':'build')}}>{example}</button>)}</div>
       </section>
 
       <section id="capabilities" className="public-section"><div className="section-heading"><span>Product</span><h2>One engineering loop, not a pile of AI demos.</h2><p>ForgePilot keeps planning, implementation, verification and delivery connected to the same project context.</p></div><div className="public-grid three"><article><span>01</span><h3>Plan before changing code</h3><p>Turn a prompt into architecture, scope and executable steps before implementation starts.</p></article><article><span>02</span><h3>Build with verification</h3><p>Generate and iterate on real code with preview, tests, security checks and recoverable versions.</p></article><article><span>03</span><h3>Own the outcome</h3><p>Connect GitHub, integrations and deployment while keeping governance and engineering evidence visible.</p></article></div></section>
