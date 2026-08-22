@@ -13,8 +13,7 @@ class OAuthClientRegistrationConfigTest {
     void buildsGoogleAndGithubProvidersFromCompleteCredentials() {
         var repository = config.clientRegistrationRepository(
                 "google-id", "google-secret",
-                "github-id", "github-secret",
-                "", "", "");
+                "github-id", "github-secret");
         assertThat(repository).isInstanceOf(InMemoryClientRegistrationRepository.class);
         var memory = (InMemoryClientRegistrationRepository) repository;
         assertThat(memory.findByRegistrationId("google")).isNotNull();
@@ -23,8 +22,8 @@ class OAuthClientRegistrationConfigTest {
 
     @Test
     void failsClosedWhenOauthEnabledWithoutAnyCompleteProvider() {
-        assertThatThrownBy(() -> config.clientRegistrationRepository("", "", "", "", "", "", ""))
+        assertThatThrownBy(() -> config.clientRegistrationRepository("", "", "", ""))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("no complete provider credentials");
+                .hasMessageContaining("neither Google nor GitHub credentials are fully configured");
     }
 }

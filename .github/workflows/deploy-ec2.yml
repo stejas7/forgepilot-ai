@@ -43,9 +43,6 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GITHUB_OAUTH_CLIENT_ID: ${{ secrets.GITHUB_OAUTH_CLIENT_ID }}
           GITHUB_OAUTH_CLIENT_SECRET: ${{ secrets.GITHUB_OAUTH_CLIENT_SECRET }}
-          SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
-          SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
-          SSO_ISSUER_URI: ${{ secrets.SSO_ISSUER_URI }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE: ghcr.io/${{ github.repository }}:${{ steps.commit.outputs.sha }}
           TESTED_SHA: ${{ steps.commit.outputs.sha }}
@@ -55,12 +52,11 @@ jobs:
           timeout 60 $SSH "$EC2_USERNAME@$EC2_HOST" 'echo SSH_OK'
           printf '%s' "$GHCR_TOKEN" | $SSH "$EC2_USERNAME@$EC2_HOST" "sudo docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
           {
-            printf 'FORGEPILOT_IMAGE=%s\nFORGEPILOT_PORT=8090\nOPENAI_API_KEY=%s\nFORGEPILOT_AI_MODEL=gpt-5.6-luna\nSPRING_PROFILES_ACTIVE=prod\n' "$IMAGE" "$OPENAI_API_KEY"
+            printf 'FORGEPILOT_IMAGE=%s\nFORGEPILOT_PORT=8090\nOPENAI_API_KEY=%s\nFORGEPILOT_AI_MODEL=gpt-5.6-luna\nSPRING_PROFILES_ACTIVE=prod\nFORGEPILOT_PUBLIC_URL=https://forgepilot-ai.duckdns.org\nFORGEPILOT_AUTH_SSO_REQUIRED=true\n' "$IMAGE" "$OPENAI_API_KEY"
             if [ -n "$GOOGLE_CLIENT_ID" ] && [ -n "$GOOGLE_CLIENT_SECRET" ]; then printf 'GOOGLE_CLIENT_ID=%s\nGOOGLE_CLIENT_SECRET=%s\n' "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET"; fi
             if [ -n "$GITHUB_OAUTH_CLIENT_ID" ] && [ -n "$GITHUB_OAUTH_CLIENT_SECRET" ]; then printf 'GITHUB_OAUTH_CLIENT_ID=%s\nGITHUB_OAUTH_CLIENT_SECRET=%s\n' "$GITHUB_OAUTH_CLIENT_ID" "$GITHUB_OAUTH_CLIENT_SECRET"; fi
-            if [ -n "$SSO_CLIENT_ID" ] && [ -n "$SSO_CLIENT_SECRET" ] && [ -n "$SSO_ISSUER_URI" ]; then printf 'SSO_CLIENT_ID=%s\nSSO_CLIENT_SECRET=%s\nSSO_ISSUER_URI=%s\n' "$SSO_CLIENT_ID" "$SSO_CLIENT_SECRET" "$SSO_ISSUER_URI"; fi
           } > "$RUNNER_TEMP/forgepilot.env"
-          if grep -qE '^(GOOGLE_CLIENT_ID|GITHUB_OAUTH_CLIENT_ID|SSO_CLIENT_ID)=' "$RUNNER_TEMP/forgepilot.env"; then echo 'FORGEPILOT_AUTH_OAUTH_ENABLED=true' >> "$RUNNER_TEMP/forgepilot.env"; else echo 'FORGEPILOT_AUTH_OAUTH_ENABLED=false' >> "$RUNNER_TEMP/forgepilot.env"; fi
+          if grep -qE '^(GOOGLE_CLIENT_ID|GITHUB_OAUTH_CLIENT_ID)=' "$RUNNER_TEMP/forgepilot.env"; then echo 'FORGEPILOT_AUTH_OAUTH_ENABLED=true' >> "$RUNNER_TEMP/forgepilot.env"; else echo 'FORGEPILOT_AUTH_OAUTH_ENABLED=false' >> "$RUNNER_TEMP/forgepilot.env"; fi
           scp -o BatchMode=yes -o StrictHostKeyChecking=no -i "$RUNNER_TEMP/forgepilot_key" "$RUNNER_TEMP/forgepilot.env" "$EC2_USERNAME@$EC2_HOST:/tmp/forgepilot.env"
           $SSH "$EC2_USERNAME@$EC2_HOST" "bash -se" <<REMOTE
           set -Eeuo pipefail
