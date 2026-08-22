@@ -24,6 +24,6 @@ class OAuthClientRegistrationConfigTest {
     void failsClosedWhenOauthEnabledWithoutAnyCompleteProvider() {
         assertThatThrownBy(() -> config.clientRegistrationRepository("", "", "", ""))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("no complete provider credentials");
+                .hasMessageContaining("neither Google nor GitHub credentials are fully configured");
     }
 }
