@@ -11,249 +11,154 @@ ForgePilot independently implements comparable workflows and capabilities. It do
 - Every generated/manual/visual change is recoverable.
 - `main` remains releasable and CI/deployment health stays green.
 - Enterprise compliance claims are evidence-driven; controls can be implemented, certifications cannot be claimed until independently achieved.
-- P14 parity remains a continuous audit rather than a one-time checkbox.
+- Competitive capability reviews are used to find workflow gaps, never to copy third-party branding or proprietary implementation.
 
-## P0 — Runtime Foundation — DONE
-Java 21/Spring Boot, React/TypeScript, OpenAI integration, Docker/GHCR, GitHub Actions, AWS EC2 runtime.
+## P0–P30 — Foundation through enterprise acceptance
+P0–P30 established the runtime, creator dashboard, prompt/build workflow, preview, visual editing, code/history, backend, GitHub, connectors, publishing, collaboration, security, knowledge/agents, enterprise governance, identity, deployment, reliability and final acceptance foundations. These capabilities remain regression requirements while P51–P60 productize the creator experience.
 
-## P1 — Creator Dashboard — DONE
-Creator dashboard, workspace navigation, projects/search/resources, Build/Plan composer, attachments, templates/gallery.
+## P51 — ForgePilot Identity + Creator UX Reset
+**Goal:** ForgePilot must look and feel like its own polished product.
+- replace temporary `F` tiles with a distinctive original ForgePilot mark and favicon
+- one consistent brand system across login, dashboard, builder, loading/error/empty states and published surfaces
+- normalize typography, spacing, icons, buttons, cards, dialogs and side panels
+- redesign Connectors into polished provider cards with icon, description, auth type, status and Connect/Manage action
+- eliminate browser-default controls, overlapping text, raw forms and placeholder-looking UI
+- responsive desktop/tablet/mobile shell
+- keyboard/focus/accessibility pass
+- screenshot-based visual regression for critical surfaces
+- no dead visible control
 
-## P2 — Prompt → Project → AI Conversation — DONE
-Persistent projects/chat, Plan approval, Build changes, streaming status, follow-ups, attachments, retry/cancel, usage accounting.
+## P52 — Prompt-to-App Experience 2.0
+**Goal:** make idea → working app exceptionally simple.
+- richer starter gallery by product category
+- prompt enhancement and requirement clarification without blocking simple builds
+- screenshot/image/document context ingestion
+- intelligent app-name and stack inference
+- explicit Plan vs Build behavior and clear execution status
+- streamed agent timeline with meaningful steps rather than raw technical noise
+- cancel/retry/recover actions
+- first-use onboarding and contextual examples
+- persist drafts and recent prompts
+- useful failure recovery instead of generic errors
 
-## P3 — Builder + Working Preview — HARDENING
-Preview-first builder, generated preview/runtime verification, logs/restart, responsive viewports, error overlay, repair loop; production sandbox/dependency execution remains hardening.
+## P53 — Live Preview + Visual Design Studio
+**Goal:** let users polish an app without manually editing code.
+- instant preview refresh and runtime health state
+- select any rendered element from preview
+- edit text, spacing, size, alignment, colors, typography, borders and layout visually
+- desktop/tablet/mobile responsive controls
+- reusable themes and design tokens
+- workspace brand themes
+- image generation/upload/replace flow
+- AI edit selected element/component
+- undo/redo and visual change history
+- accessibility/design-quality checks before publish
 
-## P4 — Visual Editing — HARDENING
-DOM selection, stable element IDs, text/style/layout editing, responsive overrides, selected-element AI, undo/redo, snapshots; deepen component/source mapping and design tokens.
+## P54 — Full-stack Cloud Runtime
+**Goal:** generated projects become real applications, not UI mockups.
+- per-project PostgreSQL lifecycle
+- schema/table/data browser and safe migrations
+- generated CRUD/API contracts
+- authentication and application RBAC
+- storage/uploads
+- realtime events
+- background/server functions and jobs
+- secrets management
+- backend logs and diagnostics
+- dev/stage/prod environment model
+- backup/restore and migration verification
 
-## P5 — Code + Version History — CORE IMPLEMENTED
-Monaco, file CRUD/search, dirty/save state, snapshots, timeline, diff, historical preview, restore/revert; deepen named versions and prompt replay.
+## P55 — GitHub + Code Ownership 2.0
+**Goal:** users always own and can continue their code outside ForgePilot.
+- create/connect repository from project
+- reliable two-way sync
+- branch awareness
+- commits with meaningful AI-generated summaries
+- visual diff before risky changes
+- conflict detection and guided resolution
+- version snapshots tied to prompts/builds
+- rollback/revert/cherry-pick style recovery
+- repository health and sync diagnostics
+- CI status inside ForgePilot
+- portable export with no ForgePilot runtime lock-in
 
-## P6 — Full-stack Backend — IN PROGRESS
-Managed PostgreSQL, per-project isolation, migrations/schema/data browser, generated APIs, auth/RBAC/session runtime, secrets, storage/uploads, realtime, functions and backend logs.
+## P56 — Connector & MCP Ecosystem
+**Goal:** connect real business systems cleanly and safely.
+- searchable connector marketplace/catalog
+- GitHub, Supabase/Postgres, Stripe, Resend/email, Slack and generic REST/webhook first-class connectors
+- OAuth, API key and secret-based setup wizards
+- connection test, health, reconnect and revoke
+- project/workspace/user connection scopes
+- permissions and connector allowlists
+- custom REST/GraphQL connector builder
+- MCP client for external tools/context
+- MCP server generation for published ForgePilot apps
+- audit every connector action and protect credentials server-side
 
-## P7 — GitHub Ownership + Two-way Sync — IN PROGRESS
-Connect/create repo, push/pull, branch awareness, sync baseline/conflict protection, status, reconnect; deepen conflict-resolution UX and provider auth.
+## P57 — Autonomous Engineering Agent
+**Goal:** evolve from code generation into a bounded AI engineering loop.
+- planner → implementer → verifier → repair loop
+- specialized frontend, backend, database, security and deployment workers
+- automatically run compile, unit, integration and browser checks
+- inspect failures and repair within bounded retries
+- checkpoints and resumable long-running tasks
+- background/queued builds
+- human approval for destructive/high-risk actions
+- execution trace showing files, tools, tests and decisions at a useful level
+- model routing/fallback and token/runtime budgets
+- deterministic cancellation and recovery
 
-## P8 — Connectors + Integrations — IN PROGRESS
-Connector catalog/framework, project/app/user connectors, OAuth/API-key/webhook/REST/GraphQL, workspace allowlists, permissions, health, Stripe/email/context/workflow/enterprise integrations.
+## P58 — Publish, Domains + Production Operations
+**Goal:** move from preview to production confidently.
+- one-action publish from a verified build
+- immutable release artifacts
+- custom domain and DNS verification
+- automatic TLS
+- environment variables and secret bindings
+- release history
+- rollback/unpublish
+- deployment/build/runtime logs
+- health/readiness monitoring
+- SEO/metadata controls
+- security and quality publish gate
+- usage/performance telemetry and basic alerting
 
-## P9 — Publish + Share — CORE IMPLEMENTED
-Immutable releases, approvals, publish URL, visibility, update/republish, history, rollback/unpublish and audit; finish custom domains, DNS verification, TLS, metadata/SEO and deployment observability.
+## P59 — Collaboration, Teams + Enterprise Governance
+**Goal:** make ForgePilot usable by real product and engineering teams.
+- workspace/project members and invitations
+- Owner/Admin/Editor/Viewer/Approver/Publisher permissions
+- comments, mentions and preview annotations
+- activity feed and notifications
+- project folders and ownership transfer
+- publish approvals
+- enterprise SSO/OIDC/SAML and SCIM completion
+- centralized audit log
+- connector/model/publish policies
+- workspace usage and cost controls
+- security center and application inventory
+- retention/export/governance controls
 
-## P10 — Collaboration + Workspace — CORE IMPLEMENTED
-Members, sharing, Owner/Admin/Editor/Viewer/Approver/Publisher roles, comments, activity/audit, workspace governance; finish access requests, notifications, folders, presence and concurrent editing.
+## P60 — Competitive Acceptance + ForgePilot GA
+**Goal:** prove ForgePilot's complete creator journey with evidence.
+- maintain a current capability matrix against leading AI app builders, including Lovable-style workflows, without copying proprietary implementation
+- run full E2E: sign in → create → plan/build → preview → visual edit → backend → connector → GitHub → publish → rollback
+- zero raw/browser-default production UI on core journeys
+- zero non-functional visible controls
+- regression suite for authentication, project isolation, GitHub, connectors and publishing
+- security, secret leakage and tenant-boundary tests
+- accessibility/responsive acceptance
+- performance/load/resilience checks
+- backup/restore/deployment rollback evidence
+- README, architecture, API and operations documentation alignment
+- GA checklist with PASS/PARTIAL/GAP evidence; no unsupported parity or certification claims
 
-## P11 — Security + Quality — CORE IMPLEMENTED
-Basic/deep scans, secret/SAST/database/accessibility checks, history, Fix-with-AI, Trust summary, workspace Security Center and publish gate; deepen dependency scanners, E2E, scheduled scans, external security providers and network controls.
-
-## P12 — Knowledge, Templates + Advanced Agent — CORE IMPLEMENTED
-Durable knowledge, retrieval context, skills/instructions, templates/remix foundation and queued agent tasks. Finish embeddings/vector RAG, autonomous multi-agent execution, MCP client/server and external tools.
-
-## P13 — Enterprise Governance + Administration — CORE IMPLEMENTED
-Enterprise admin read model, app inventory, Workspace Insights, governance settings, SSO/SAML/OIDC + SCIM contracts, RBAC/publish/connector/model policies, audit/security posture. Finish live IdP/SCIM execution, exports, retention and scheduled governance.
-
-## P14 — Lovable-style Capability Parity Audit — CONTINUOUS
-Capability matrix across dashboard, creation, Plan/Build, preview, visual edit, code/history, backend, GitHub, connectors, publishing, collaboration, security, knowledge/agents and enterprise. PASS/PARTIAL/GAP only; no false parity claim.
-
-## P15 — Production Hardening & GA Readiness — ACTIVE
-Readiness endpoint, parity/security/state gates, regression suite, performance/resource review, backup/restore/DR, config validation, observability, alerts, operational runbook, release/rollback checklist.
-
-## P16 — Enterprise Identity Runtime
-- real SAML 2.0 and OIDC login flows
-- Okta, Microsoft Entra ID and Google Workspace configuration
-- domain discovery and enforced SSO
-- SCIM users/groups provisioning and deprovisioning
-- group → ForgePilot role mapping
-- session/token lifecycle and emergency admin access
-- reusable enterprise auth profiles for generated applications
-- identity/audit diagnostics
-
-## P17 — Advanced Workspace Governance
-- organization/workspace hierarchy
-- private-by-default/project-visibility policies
-- granular server-enforced permissions
-- connector/model/provider allowlists
-- environment and publishing policies
-- centralized secrets policy
-- project ownership reassignment
-- abandoned-app review/cleanup workflow
-- policy simulation before enforcement
-- immutable policy-change audit
-
-## P18 — Workspace Insights & Application Inventory
-- enterprise landing/Insights dashboard
-- total apps, active apps and externally published apps
-- apps requiring review
-- PII/sensitive-data indicators
-- missing-owner and abandoned-app indicators
-- open security findings
-- backend/database exposure inventory
-- connector/provider usage inventory
-- filtering/search/export and drill-down
-- executive/security/engineering views
-
-## P19 — Enterprise Security Center
-- organization-wide security posture
-- recurring/scheduled deep scans
-- dependency/SCA, secret, SAST, auth/RBAC/RLS and cloud checks
-- WAF/rate-limit/network-isolation readiness
-- abuse/risk monitoring hooks
-- external security provider adapters such as Wiz-class tools
-- finding assignment, SLA, suppression and evidence
-- AI remediation + verification
-- publish blocking by workspace policy
-
-## P20 — Audit, Trust & Compliance Operations
-- searchable append-only audit log
-- export and retention policies
-- identity, connector, secret, publishing and permission events
-- Trust Center for product/security evidence
-- DPA/subprocessor/security-document resource surfaces
-- compliance control/evidence mapping
-- change log and security advisories
-- legal/compliance owner workflows
-- no certification badges until independently achieved
-
-## P21 — Enterprise Connector Governance
-- centralized connector catalog
-- workspace-managed OAuth/API-key connections
-- per-user/app-user connectors preserving source permissions
-- role/project connector access
-- connector approval workflow
-- secret rotation/expiry
-- connection health and diagnostics
-- connector usage/audit inventory
-- Jira/Confluence/Notion/Linear/Miro/n8n/CRM/database/provider adapters
-- REST/GraphQL/webhook custom connectors
-
-## P22 — Design Systems, Brand Governance & Templates
-- workspace design systems
-- colors/typography/spacing/component tokens
-- approved reusable components
-- locked/protected brand primitives
-- company templates and starter applications
-- remix/clone with policy preservation
-- screenshot/design ingestion
-- brand-consistency checks
-- workspace-level visual policies
-- reusable authentication/application shells
-
-## P23 — Advanced Agent Runtime
-- autonomous multi-step execution
-- planner/executor/verifier loop
-- specialized coding, security, database, design and deployment subagents
-- queued/background prompts
-- resumable jobs and checkpoints
-- bounded retry/cancel/timeouts
-- human approval gates for risky operations
-- MCP client/server
-- external agent/tool integrations
-- full execution trace and cost accounting
-
-## P24 — Enterprise Data & Backend Platform
-- hardened managed PostgreSQL lifecycle
-- backups/PITR and restore testing
-- storage/object uploads
-- realtime subscriptions
-- generated server functions/jobs
-- schema migration safety
-- RLS/data-access policy generator and verifier
-- data residency/configuration hooks
-- PII discovery/classification
-- environment promotion dev/stage/prod
-- backend observability and quotas
-
-## P25 — Production Runtime & Deployment Platform
-- isolated per-project runtime/container sandbox
-- dependency install/build/run for generated frameworks
-- CPU/memory/time/network limits
-- build cache and artifact lifecycle
-- deployment environments
-- custom domains + DNS verification
-- automated TLS
-- immutable deployment artifacts
-- canary/rollback foundation
-- runtime/build/deployment logs
-- autoscaling/readiness architecture
-
-## P26 — Collaboration 2.0
-- realtime presence
-- concurrent editing foundation
-- comments/threads/mentions
-- preview/element annotations
-- notifications/inbox
-- access requests and approval
-- folders/collections
-- project transfer/ownership
-- activity feed
-- conflict-safe collaborative editing
-
-## P27 — Developer & Platform Extensibility
-- public/internal ForgePilot API
-- API tokens/service accounts
-- webhooks/event subscriptions
-- CLI
-- SDKs and generated client contracts
-- plugin/tool extension model
-- MCP registry/management
-- automation hooks
-- import/export portability
-- admin-safe rate limits and scopes
-
-## P28 — Usage, Cost, Quotas & FinOps
-- per-user/project/workspace AI usage
-- model/token/tool/runtime cost accounting
-- configurable budgets and quotas
-- model routing/fallback policy
-- usage alerts
-- cost center/team attribution
-- connector/runtime/storage consumption
-- enterprise usage exports
-- admin dashboards
-- optimization recommendations
-
-## P29 — Enterprise Reliability, Support & Operations
-- SLO/SLI dashboards
-- centralized metrics/logs/traces
-- alerting/on-call hooks
-- backup/restore/DR drills
-- incident management and status communication hooks
-- support/onboarding resource center
-- escalation metadata
-- tenant diagnostics bundle
-- feature flags and controlled rollout
-- maintenance and migration tooling
-
-## P30 — Final Enterprise Product Acceptance
-- rerun full P14 capability audit
-- zero unexplained GAP items for agreed internal parity scope
-- explicitly accepted PARTIAL items only where external/legal/certification dependencies exist
-- full creator-journey E2E regression
-- enterprise identity/SCIM regression
-- RBAC/publishing approval regression
-- connector permission regression
-- GitHub ownership/sync regression
-- security/publish-gate regression
-- Workspace Insights/audit/Trust Center regression
-- performance/load/resilience tests
-- backup/restore/rollback test evidence
-- accessibility/responsive review
-- dead-code/placeholder/control cleanup
-- README/architecture/runbook/API documentation alignment
-- CI/CD + EC2/production deployment verification
-- final acceptance report with PASS/PARTIAL/GAP and evidence links
-
-## Execution sequence
-1. Keep P3–P11 regression green while closing their production-scale gaps.
-2. Deepen P12/P13 where required by enterprise workflows.
-3. Run P14 continuously as the master gap register.
-4. P15 remains the near-term production readiness gate.
-5. Implement P16–P22 enterprise identity, governance, insights, security, compliance, connectors and brand/design capabilities.
-6. Implement P23–P29 advanced agents, backend/runtime, collaboration, extensibility, FinOps and reliability.
-7. P30 is final enterprise acceptance; nothing is called complete merely because a UI exists.
+## P51–P60 execution order
+1. **P51 first:** product identity and UX quality become a release gate.
+2. **P52–P53:** perfect the creator loop and visual iteration experience.
+3. **P54–P56:** make generated apps genuinely full-stack, portable and connected.
+4. **P57:** deepen autonomous engineering only after deterministic build/test primitives are reliable.
+5. **P58–P59:** production publishing, collaboration and governance.
+6. **P60:** final evidence-based GA acceptance and competitive capability review.
 
 ## Definition of Done
-ForgePilot is complete for the agreed internal enterprise scope only when the creator journey works end-to-end and enterprise controls are enforced server-side: build/plan, real preview, visual editing, backend/integrations, version recovery, GitHub ownership, controlled publishing, collaboration, enterprise identity, Workspace Insights, security, connector governance, audit/Trust operations, production reliability and cost governance. P30 must contain test/evidence for the final acceptance decision.
+ForgePilot is complete for this roadmap only when the creator journey works end-to-end: a user can sign in, describe an application, plan/build it, see a working preview, visually refine it, create and inspect backend behavior, connect real services, own/sync the code in GitHub, test and repair it, publish it safely, collaborate with a team and recover from failures. UI presence alone never counts as implementation.
