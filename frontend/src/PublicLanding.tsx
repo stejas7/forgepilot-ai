@@ -1,4 +1,5 @@
-import {useState} from 'react'
+import {useEffect,useState} from 'react'
+import PublicContentPage,{hasPublicPage} from './PublicContentPage'
 
 type Props={onAuthenticate:()=>void}
 
@@ -8,25 +9,34 @@ const examples=[
   'Plan a SaaS dashboard with billing, teams and usage limits'
 ]
 
+const solutionLinks=[
+  ['Engineering','solutions/engineering'],['Product','solutions/product'],['Founders','solutions/founders'],['Operations','solutions/operations'],['Websites','solutions/websites'],['Internal tools','solutions/internal-tools']
+]
+const resourceLinks=[
+  ['Templates','resources/templates'],['Connectors','resources/connectors'],['Documentation','resources/docs'],['Guides','resources/guides']
+]
+
 export default function PublicLanding({onAuthenticate}:Props){
-  const [prompt,setPrompt]=useState('')
-  function start(){
-    const value=prompt.trim()
-    if(value) sessionStorage.setItem('forgepilot.pendingPrompt',value)
-    onAuthenticate()
-  }
+  const [prompt,setPrompt]=useState(''),[route,setRoute]=useState(()=>routeFromHash())
+  useEffect(()=>{const onHash=()=>setRoute(routeFromHash());window.addEventListener('hashchange',onHash);return()=>window.removeEventListener('hashchange',onHash)},[])
+  function start(){const value=prompt.trim();if(value)sessionStorage.setItem('forgepilot.pendingPrompt',value);onAuthenticate()}
+  function navigate(slug:string){window.location.hash=`/${slug}`}
+  function home(){history.replaceState(null,'',window.location.pathname+window.location.search);setRoute('')}
+  const content=hasPublicPage(route)
   return <div className="public-shell">
     <header className="public-header">
-      <a className="public-brand" href="#top" aria-label="ForgePilot home"><span className="pilot-mark" aria-hidden="true"><i/><i/><i/></span><b>ForgePilot</b></a>
+      <button className="public-brand brand-button" onClick={home} aria-label="ForgePilot home"><span className="pilot-mark" aria-hidden="true"><i/><i/><i/></span><b>ForgePilot</b></button>
       <nav aria-label="Public navigation">
-        <a href="#capabilities">Product</a>
-        <a href="#workflow">How it works</a>
-        <a href="#enterprise">Enterprise</a>
-        <a href="#security">Security</a>
+        <div className="nav-group"><button>Solutions <span>⌄</span></button><div className="mega-menu"><div><small>SOLUTIONS</small><b>Build for the way your team works.</b><p>Real app-building workflows for engineering, product and operations.</p></div><div className="mega-links">{solutionLinks.map(([label,slug])=><button key={slug} onClick={()=>navigate(slug)}><b>{label}</b><span>Explore ForgePilot for {label.toLowerCase()}</span></button>)}</div></div></div>
+        <div className="nav-group"><button>Resources <span>⌄</span></button><div className="mega-menu resources-menu"><div><small>RESOURCES</small><b>Patterns, integrations and guidance.</b><p>Everything needed to understand and extend the ForgePilot creator journey.</p></div><div className="mega-links">{resourceLinks.map(([label,slug])=><button key={slug} onClick={()=>navigate(slug)}><b>{label}</b><span>Open {label.toLowerCase()}</span></button>)}</div></div></div>
+        <button onClick={()=>{home();setTimeout(()=>document.getElementById('workflow')?.scrollIntoView({behavior:'smooth'}),0)}}>How it works</button>
+        <button onClick={()=>{home();setTimeout(()=>document.getElementById('enterprise')?.scrollIntoView({behavior:'smooth'}),0)}}>Enterprise</button>
+        <button onClick={()=>{home();setTimeout(()=>document.getElementById('security')?.scrollIntoView({behavior:'smooth'}),0)}}>Security</button>
       </nav>
       <div className="public-actions"><button className="public-login" onClick={onAuthenticate}>Log in</button><button className="public-primary" onClick={onAuthenticate}>Get started</button></div>
     </header>
 
+    {content?<PublicContentPage slug={route} onAuthenticate={onAuthenticate} onHome={home}/>:<>
     <main id="top">
       <section className="public-hero">
         <div className="public-kicker">AI application engineering, from idea to production</div>
@@ -56,8 +66,10 @@ export default function PublicLanding({onAuthenticate}:Props){
       <section id="enterprise" className="public-section split-section"><div><span className="section-label">Enterprise-ready foundation</span><h2>AI speed with engineering control.</h2><p>Workspace roles, controlled publishing, auditability, connector governance and source ownership are designed into the product rather than added after generation.</p><button className="public-secondary" onClick={onAuthenticate}>Open workspace →</button></div><div className="proof-card"><b>Governed creator journey</b><ul><li>SSO-backed workspace access</li><li>Role-aware creator permissions</li><li>Security and publish gates</li><li>GitHub ownership and deployment evidence</li></ul></div></section>
 
       <section id="security" className="public-section split-section security-section"><div><span className="section-label">Security</span><h2>Secure by workflow, transparent by evidence.</h2><p>ForgePilot separates implemented controls from roadmap claims and keeps credentials server-side. Security checks remain part of the build and publish flow.</p></div><div className="security-badges"><span>OAuth / SSO</span><span>RBAC</span><span>Secret isolation</span><span>Audit trail</span><span>Security scans</span><span>Release gates</span></div></section>
-    </main>
+    </main></>}
 
-    <footer className="public-footer"><a className="public-brand" href="#top"><span className="pilot-mark small" aria-hidden="true"><i/><i/><i/></span><b>ForgePilot</b></a><p>AI application engineering with production discipline.</p><button onClick={onAuthenticate}>Log in</button></footer>
+    <footer className="public-footer"><button className="public-brand brand-button" onClick={home}><span className="pilot-mark small" aria-hidden="true"><i/><i/><i/></span><b>ForgePilot</b></button><p>AI application engineering with production discipline.</p><button onClick={onAuthenticate}>Log in</button></footer>
   </div>
 }
+
+function routeFromHash(){return window.location.hash.replace(/^#\/?/,'').replace(/\/$/,'')}
