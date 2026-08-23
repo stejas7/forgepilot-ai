@@ -45,7 +45,7 @@ export default function PublicLanding({onAuthenticate}:Props){
   const content=hasPublicPage(route)
   return <div className="public-shell">
     <header className="public-header">
-      <button className="public-brand brand-button" onClick={home} aria-label="ForgePilot home"><span className="pilot-mark" aria-hidden="true"><i/><i/><i/></span><b>ForgePilot</b></button>
+      <button className="public-brand brand-button" onClick={home} aria-label="ForgePilot home"><span className="pilot-mark" aria-hidden="true">F</span><b>ForgePilot</b></button>
       <nav aria-label="Public navigation">
         <div className="nav-group"><button>Solutions <span>⌄</span></button><div className="mega-menu solutions-menu"><div><small>WHO IS IT FOR?</small><b>Build for the way your team works.</b><p>ForgePilot turns requirements into governed, production-oriented software.</p></div><div className="mega-links">{solutionLinks.map(([label,slug,desc])=><button key={slug} onClick={()=>navigate(slug)}><b>{label}</b><span>{desc}</span></button>)}</div></div></div>
         <div className="nav-group"><button>Resources <span>⌄</span></button><div className="mega-menu resources-menu"><div><small>RESOURCES</small><b>Learn, extend and operate ForgePilot.</b><p>Patterns, integrations and guidance for the complete creator journey.</p></div><div className="mega-links">{resourceLinks.map(([label,slug,desc])=><button key={slug} onClick={()=>navigate(slug)}><b>{label}</b><span>{desc}</span></button>)}</div></div></div>
@@ -77,7 +77,7 @@ export default function PublicLanding({onAuthenticate}:Props){
       <section id="security" className="public-section split-section security-section"><div><span className="section-label">Security</span><h2>Secure by workflow, transparent by evidence.</h2><p>ForgePilot separates implemented controls from roadmap claims and keeps credentials server-side. Security checks remain part of the build and publish flow.</p><button className="public-secondary" onClick={()=>navigate('security')}>Explore Security →</button></div><div className="security-badges"><span>OAuth / SSO</span><span>RBAC</span><span>Secret isolation</span><span>Audit trail</span><span>Security scans</span><span>Release gates</span></div></section>
     </main></>}
 
-    <footer className="public-footer"><button className="public-brand brand-button" onClick={home}><span className="pilot-mark small" aria-hidden="true"><i/><i/><i/></span><b>ForgePilot</b></button><p>AI application engineering with production discipline.</p><button onClick={onAuthenticate}>Log in</button></footer>
+    <footer className="public-footer"><button className="public-brand brand-button" onClick={home}><span className="pilot-mark small" aria-hidden="true">F</span><b>ForgePilot</b></button><p>AI application engineering with production discipline.</p><button onClick={onAuthenticate}>Log in</button></footer>
   </div>
 }
 
