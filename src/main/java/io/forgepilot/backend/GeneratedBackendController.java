@@ -19,10 +19,16 @@ import java.util.UUID;
 @RequestMapping("/api/projects/{projectId}/backend")
 public class GeneratedBackendController {
     private final GeneratedBackendService service;
-    public GeneratedBackendController(GeneratedBackendService service) { this.service = service; }
+    private final BackendCodeGeneratorService codeGenerator;
+
+    public GeneratedBackendController(GeneratedBackendService service, BackendCodeGeneratorService codeGenerator) {
+        this.service = service;
+        this.codeGenerator = codeGenerator;
+    }
 
     @GetMapping public GeneratedBackendService.BackendProject get(@PathVariable UUID projectId){ return service.get(projectId); }
     @PostMapping("/provision") public GeneratedBackendService.BackendProject provision(@PathVariable UUID projectId){ return service.provision(projectId); }
+    @PostMapping("/generate") public BackendCodeGeneratorService.GenerationResult generate(@PathVariable UUID projectId,@Valid @RequestBody GenerateRequest request){ return codeGenerator.generate(projectId, request.resourceName(), request.packageName()); }
     @PutMapping("/auth") public GeneratedBackendService.BackendProject auth(@PathVariable UUID projectId,@RequestBody AuthRequest request){ return service.configureAuth(projectId,request.emailPassword(),request.oauth(),request.rbac()); }
     @PutMapping("/secrets") public GeneratedBackendService.BackendProject secret(@PathVariable UUID projectId,@Valid @RequestBody SecretRequest request){ return service.putSecret(projectId,request.name(),request.value()); }
     @PostMapping("/tables") public GeneratedBackendService.BackendProject table(@PathVariable UUID projectId,@Valid @RequestBody TableRequest request){ return service.registerTable(projectId,request.name(),request.columns()); }
@@ -32,4 +38,5 @@ public class GeneratedBackendController {
     public record AuthRequest(boolean emailPassword,boolean oauth,boolean rbac){}
     public record SecretRequest(@NotBlank String name,@NotBlank String value){}
     public record TableRequest(@NotBlank String name,List<GeneratedBackendService.Column> columns){}
+    public record GenerateRequest(@NotBlank String resourceName,String packageName){}
 }
