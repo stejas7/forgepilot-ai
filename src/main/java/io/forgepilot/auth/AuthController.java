@@ -41,11 +41,15 @@ public class AuthController {
         if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
             for (String key : List.of("name", "login", "preferred_username", "email")) {
                 Object value = oauth2User.getAttributes().get(key);
-                if (value != null && !value.toString().isBlank()) return value.toString().trim();
+                if (value != null) {
+                    String candidate = value.toString().trim();
+                    if (!candidate.isBlank() && !candidate.matches("\\d+")) return candidate;
+                }
             }
         }
         String name = authentication.getName();
-        return name == null ? "" : name.trim();
+        if (name == null || name.isBlank() || name.trim().matches("\\d+")) return "Signed in user";
+        return name.trim();
     }
 
     @GetMapping("/providers")
