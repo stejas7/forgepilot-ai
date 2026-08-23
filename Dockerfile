@@ -8,10 +8,10 @@ RUN npm run build
 FROM maven:3.9.11-eclipse-temurin-21 AS backend-build
 WORKDIR /workspace
 COPY pom.xml .
-RUN mvn -B -q -DskipTests dependency:go-offline
+RUN mvn -B -q -Dmaven.test.skip=true dependency:go-offline
 COPY src src
 COPY --from=frontend-build /workspace/frontend/dist /workspace/src/main/resources/static
-RUN mvn -B -q -DskipTests clean package
+RUN mvn -B -q -Dmaven.test.skip=true clean package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
