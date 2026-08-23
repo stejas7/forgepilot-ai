@@ -19,6 +19,7 @@ import './p58.css'
 import './p59.css'
 import './p61.css'
 import './p62.css'
+import './connectors.css'
 
 type Session={authenticated:boolean;name:string;authorities:string[]}
 function Root(){
