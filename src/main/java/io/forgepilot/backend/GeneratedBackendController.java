@@ -20,15 +20,20 @@ import java.util.UUID;
 public class GeneratedBackendController {
     private final GeneratedBackendService service;
     private final BackendCodeGeneratorService codeGenerator;
+    private final AuthenticationScaffoldService authenticationScaffoldService;
 
-    public GeneratedBackendController(GeneratedBackendService service, BackendCodeGeneratorService codeGenerator) {
+    public GeneratedBackendController(GeneratedBackendService service,
+                                      BackendCodeGeneratorService codeGenerator,
+                                      AuthenticationScaffoldService authenticationScaffoldService) {
         this.service = service;
         this.codeGenerator = codeGenerator;
+        this.authenticationScaffoldService = authenticationScaffoldService;
     }
 
     @GetMapping public GeneratedBackendService.BackendProject get(@PathVariable UUID projectId){ return service.get(projectId); }
     @PostMapping("/provision") public GeneratedBackendService.BackendProject provision(@PathVariable UUID projectId){ return service.provision(projectId); }
     @PostMapping("/generate") public BackendCodeGeneratorService.GenerationResult generate(@PathVariable UUID projectId,@Valid @RequestBody GenerateRequest request){ return codeGenerator.generate(projectId, request.resourceName(), request.packageName()); }
+    @PostMapping("/auth/scaffold") public AuthenticationScaffoldService.AuthScaffoldResult scaffoldAuth(@PathVariable UUID projectId,@RequestBody AuthScaffoldRequest request){ return authenticationScaffoldService.generate(projectId, new AuthenticationScaffoldService.AuthScaffoldRequest(request.packageName(), request.roles(), request.emailPasswordEnabled(), request.oauthEnabled())); }
     @PutMapping("/auth") public GeneratedBackendService.BackendProject auth(@PathVariable UUID projectId,@RequestBody AuthRequest request){ return service.configureAuth(projectId,request.emailPassword(),request.oauth(),request.rbac()); }
     @PutMapping("/secrets") public GeneratedBackendService.BackendProject secret(@PathVariable UUID projectId,@Valid @RequestBody SecretRequest request){ return service.putSecret(projectId,request.name(),request.value()); }
     @PostMapping("/tables") public GeneratedBackendService.BackendProject table(@PathVariable UUID projectId,@Valid @RequestBody TableRequest request){ return service.registerTable(projectId,request.name(),request.columns()); }
@@ -36,6 +41,7 @@ public class GeneratedBackendController {
     @GetMapping("/logs") public List<String> logs(@PathVariable UUID projectId){ return service.logs(projectId); }
 
     public record AuthRequest(boolean emailPassword,boolean oauth,boolean rbac){}
+    public record AuthScaffoldRequest(String packageName,List<String> roles,boolean emailPasswordEnabled,boolean oauthEnabled){}
     public record SecretRequest(@NotBlank String name,@NotBlank String value){}
     public record TableRequest(@NotBlank String name,List<GeneratedBackendService.Column> columns){}
     public record GenerateRequest(@NotBlank String resourceName,String packageName){}
